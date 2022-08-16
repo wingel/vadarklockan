@@ -4,6 +4,8 @@
  */
 #include <WiFi.h>
 #include <WiFiUdp.h>
+#include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
+#include <SPI.h>
 
 #include "vrt.h"
 #include "tweetnacl.h"
@@ -45,9 +47,20 @@ struct rt_server servers[] = {
     { "194.58.207.197", 2009, 1, { 0x88,0x56,0x3d,0x82,0x52,0x27,0xf1,0x21,0xc6,0xb6,0x41,0x53,0x75,0x41,0x02,0x61,0xd0,0xb7,0xed,0x3e,0x0f,0x34,0xcd,0x98,0x48,0x5c,0xe3,0x6c,0x46,0xe6,0x7d,0x92 } }, /* falseticker.roughtime.netnod.se */
 };
 
+TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
+
+uint32_t targetTime = 0;       // for next 1 second timeout
+byte omm = 99;
+bool initial = 1;
+byte xcolon1 = 0;
+byte xcolon2 = 0;
+byte colon_size = 0;
+unsigned int colour = 0;
+uint8_t hh, mm, ss;
+
 // WiFi network name and password:
-const char * networkName = "Carl-Williams iPhone";
-const char * networkPswd = "12345678";
+const char * networkName = "netnod-guest";
+const char * networkPswd = "lockdoris";
 
 //Are we currently connected?
 boolean connected = false;
@@ -55,25 +68,89 @@ boolean connected = false;
 //The udp library class
 WiFiUDP udp;
 
+int which_server = 4;
+
 void setup(){
   // Initilize hardware serial:
   Serial.begin(115200);
+
+  tft.init();
+  tft.setRotation(1);
+  tft.fillScreen(TFT_BLACK);
+  targetTime = millis() + 1000; 
   
   //Connect to the WiFi network
   connectToWiFi(networkName, networkPswd);
-}
 
-void loop(){
+  delay(5000);
+
   //only send data when connected
   if(connected){
     //Send a packet
-    doit(&servers[1]);
+    doit(&servers[which_server]);
   }
-  //Wait for 1 second
-  delay(5000);
 }
 
-void connectToWiFi(const char * ssid, const char * pwd){
+void loop() {
+  
+  if (targetTime < millis()) {
+    targetTime = millis()+1000;
+    ss++;              // Advance second
+    if (ss==60) {
+      ss=0;
+      omm = mm;
+      mm++;            // Advance minute
+      if(mm>59) {
+        mm=0;
+        hh++;          // Advance hour
+        if (hh>23) {
+          hh=0;
+        }
+      }
+    }
+
+    // Update digital time
+    byte xpos = 6;
+    byte ypos = 3;
+    if (omm != mm) { // Only redraw every minute to minimise flicker
+      tft.setTextColor(TFT_BLACK, TFT_BLACK); // Set font colour to black to wipe image
+      
+      tft.drawString("88:88:88",xpos,ypos,7); // Overwrite the text to clear it
+      tft.setTextColor(0xFBE0); // Orange
+      omm = mm;
+
+      if (hh<10) xpos+= tft.drawChar('0',xpos,ypos,7);
+      xpos+= tft.drawNumber(hh,xpos,ypos,7);
+      xcolon1=xpos;
+      xpos+= tft.drawChar(':',xpos,ypos,7);
+      if (mm<10) xpos+= tft.drawChar('0',xpos,ypos,7);
+      xpos+= tft.drawNumber(mm,xpos,ypos,7);
+      xcolon2=xpos;
+      colon_size= tft.drawChar(':',xpos,ypos,7);
+      xpos+= colon_size;
+      if (ss<10) xpos+= tft.drawChar('0',xpos,ypos,7);
+      tft.drawNumber(ss,xpos,ypos,7);
+    }
+
+    tft.fillRect(xcolon2+1, ypos, 100,100,TFT_BLACK);
+    byte adjustment = colon_size;
+    if (ss<10) adjustment+=tft.drawChar('0',xcolon2+colon_size,ypos,7);
+    tft.drawNumber(ss,xcolon2+adjustment,ypos,7);
+
+    if (ss%2) { // Flash the colon
+      tft.setTextColor(0x39C4, TFT_BLACK);
+      tft.drawChar(':',xcolon1,ypos,7);
+      tft.drawChar(':',xcolon2,ypos,7);
+      tft.setTextColor(0xFBE0, TFT_BLACK);
+    }
+    else {
+      tft.drawChar(':',xcolon1,ypos,7);
+      tft.drawChar(':',xcolon2,ypos,7);
+    }
+  }
+}
+
+void connectToWiFi(const char *ssid, const char *pwd){
   Serial.println("Connecting to WiFi network: " + String(ssid));
 
   // delete old config
@@ -107,14 +184,13 @@ void WiFiEvent(WiFiEvent_t event){
 }
 
 int doit(struct rt_server *server){
-
+  
   uint32_t recv_buffer[VRT_QUERY_PACKET_LEN / 4] = {0};
   uint8_t query[VRT_QUERY_PACKET_LEN] = {0};
   uint64_t out_midpoint;
   uint32_t out_radii;
 
   /* prepare query */
-  //uint32_t t = esp_random();
   uint8_t nonce[VRT_NONCE_SIZE] = "preferably a random byte buffer";
   CHECK(vrt_make_query(nonce, sizeof(nonce), query, sizeof(query), server->variant));
 
@@ -125,15 +201,42 @@ int doit(struct rt_server *server){
   udp.endPacket();
 
   while(udp.parsePacket() == 0){}
+
+  unsigned n = udp.read((char*)recv_buffer, sizeof(query));
   
-  if(udp.read((char*)recv_buffer, sizeof(query)) > 0)
+  if(n > 0)
   {
     CHECK(vrt_parse_response(nonce, sizeof(nonce), recv_buffer,
-                            sizeof(recv_buffer),
+                            n,
                             server->public_key, &out_midpoint,
                             &out_radii, server->variant));
 
-    printf("midp %" PRIu64 " radi %u\n", out_midpoint, out_radii);
+    time_t t;
+    if (server->variant == 0) {
+      t = out_midpoint / 1000000;
+    } else {
+    unsigned mjd = out_midpoint >> 40;
+    unsigned seconds_from_midnight = (out_midpoint & 0xffffffffff) / 1000000;
+    t = (mjd - 40587) * 86400 + seconds_from_midnight;
+  }
+
+  unsigned microseconds = out_midpoint % 1000000;
+
+  struct tm *tm = gmtime(&t);
+
+  printf("midp %" PRIu64 " radi %u\n", out_midpoint, out_radii);
+  printf("%04u-%02u-%02u %02u:%02u:%02u.%06u\n",
+   tm->tm_year + 1900,
+   tm->tm_mon + 1,
+   tm->tm_mday,
+   tm->tm_hour,
+   tm->tm_min,
+   tm->tm_sec,
+   microseconds);
+
+   hh = tm->tm_hour;
+   mm = tm->tm_min;
+   ss = tm->tm_sec;
   }
   return 0;
 }
