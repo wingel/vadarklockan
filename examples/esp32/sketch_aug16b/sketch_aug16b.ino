@@ -59,8 +59,8 @@ unsigned int colour = 0;
 uint8_t hh, mm, ss;
 
 // WiFi network name and password:
-const char * networkName = "netnod-guest";
-const char * networkPswd = "lockdoris";
+const char * networkName = "Insert Network Name";
+const char * networkPswd = "Insert Password";
 
 //Are we currently connected?
 boolean connected = false;
