@@ -1,7 +1,7 @@
 Installera lite saker som behövs
 
 ```
-pip3 install adafruit-ampy esptool
+pip3 install adafruit-ampy esptool python-is-python3
 ```
 
 Hämta micropython med stöd för ed25519 och sha512
@@ -9,6 +9,8 @@ Hämta micropython med stöd för ed25519 och sha512
 ```
 git clone https://github.com/wingel/MicroPython_ESP32_psRAM_LoBo
 ```
+
+Flasha ESP32 med MicroPython
 
 ```
 esptool.py -p /dev/ttyACM0 -b 921600 erase_flash
