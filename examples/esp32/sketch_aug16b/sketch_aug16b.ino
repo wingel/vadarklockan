@@ -6,9 +6,14 @@
 #include <WiFiUdp.h>
 #include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
+#include <time.h> 
 
+#include "login.h"
+extern "C" {
+#include "clusteringAlgorithm.h"
 #include "vrt.h"
 #include "tweetnacl.h"
+}
 
 #define CHECK(x)                                                               \
   do {                                                                         \
@@ -27,7 +32,7 @@ struct rt_server {
 };
 
 struct rt_server servers[] = {
-    { "172.105.3.84", 2002, 0, { 0x88,0x15,0x63,0xc6,0x0f,0xf5,0x8f,0xbc,0xb5,0xfa,0x44,0x14,0x4c,0x16,0x1d,0x4d,0xa6,0xf1,0x0a,0x9a,0x5e,0xb1,0x4f,0xf4,0xec,0x3e,0x0f,0x30,0x32,0x64,0xd9,0x60 } }, /* caesium.tannerryan.ca */
+    { "209.50.50.228", 2002, 0, { 0x88,0x15,0x63,0xc6,0x0f,0xf5,0x8f,0xbc,0xb5,0xfa,0x44,0x14,0x4c,0x16,0x1d,0x4d,0xa6,0xf1,0x0a,0x9a,0x5e,0xb1,0x4f,0xf4,0xec,0x3e,0x0f,0x30,0x32,0x64,0xd9,0x60 } }, /* caesium.tannerryan.ca */
     { "162.159.200.123", 2002, 0, { 0x80,0x3e,0xb7,0x85,0x28,0xf7,0x49,0xc4,0xbe,0xc2,0xe3,0x9e,0x1a,0xbb,0x9b,0x5e,0x5a,0xb7,0xe4,0xdd,0x5c,0xe4,0xb6,0xf2,0xfd,0x2f,0x93,0xec,0xc3,0x53,0x8f,0x1a } }, /* roughtime.cloudflare.com */
     { "35.192.98.51", 2002, 0, { 0x01,0x6e,0x6e,0x02,0x84,0xd2,0x4c,0x37,0xc6,0xe4,0xd7,0xd8,0xd5,0xb4,0xe1,0xd3,0xc1,0x94,0x9c,0xea,0xa5,0x45,0xbf,0x87,0x56,0x16,0xc9,0xdc,0xe0,0xc9,0xbe,0xc1 } }, /* roughtime.int08h.com */
     { "192.36.143.134", 2002, 1, { 0x4b,0x70,0x33,0x7d,0x92,0x79,0x0a,0x34,0x9d,0x90,0x9d,0xb5,0x64,0x91,0x9b,0xc6,0xa7,0x58,0x3f,0xf4,0xa8,0x13,0xc7,0xd7,0x29,0x8d,0x3e,0x6a,0x27,0x2c,0x7a,0x12 } }, /* roughtime.se */
@@ -59,8 +64,8 @@ unsigned int colour = 0;
 uint8_t hh, mm, ss;
 
 // WiFi network name and password:
-const char * networkName = "Insert Network Name";
-const char * networkPswd = "Insert Password";
+const char * networkName = username;
+const char * networkPswd = password;
 
 //Are we currently connected?
 boolean connected = false;
@@ -68,7 +73,9 @@ boolean connected = false;
 //The udp library class
 WiFiUDP udp;
 
-int which_server = 4;
+// Everything that has to do with VAK
+clusteringData *server_cluster_data = NULL;
+int needed_answers = 4;
 
 void setup(){
   // Initilize hardware serial:
@@ -81,17 +88,31 @@ void setup(){
   
   //Connect to the WiFi network
   connectToWiFi(networkName, networkPswd);
-
-  delay(5000);
-
-  //only send data when connected
-  if(connected){
-    //Send a packet
-    doit(&servers[which_server]);
-  }
 }
 
 void loop() {
+
+  if (connected){
+    for (int j = 0; j<2; j++){
+    server_cluster_data = createClusterData(needed_answers);
+    int i;
+    for (i = 0; i < sizeof(servers) / sizeof(servers[0]); i++) {
+        Serial.println( String(servers[i].host) + ":" + String(servers[i].port) + "\n");
+        if(doit(&servers[i], server_cluster_data) == -1){
+          Serial.println("Something went wrong in doit\n");
+        }
+     }
+
+    double adj = get_adjustment(server_cluster_data);
+    time_t t = adj;
+    Serial.println("adj: " + String(adj));
+    print_time(adj);
+  
+    // Free the allocated memory (may want to check if there are leaks)
+    free_tree(server_cluster_data);
+    }
+    connected = false;
+  }
   
   if (targetTime < millis()) {
     targetTime = millis()+1000;
@@ -173,6 +194,7 @@ void WiFiEvent(WiFiEvent_t event){
           Serial.println(WiFi.localIP());  
           //initializes the UDP state
           //This initializes the transfer buffer
+          
           connected = true;
           break;
       case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
@@ -183,8 +205,20 @@ void WiFiEvent(WiFiEvent_t event){
     }
 }
 
-int doit(struct rt_server *server){
-  
+// Uses a time.h function to get the time
+uint64_t get_time(){
+
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  uint64_t t = 
+    (uint64_t)(tv.tv_sec) * 1000000 +
+    (uint64_t)(tv.tv_usec);
+
+  return t;
+}
+
+int doit(struct rt_server *server, clusteringData *server_cluster_data){
+
   uint32_t recv_buffer[VRT_QUERY_PACKET_LEN / 4] = {0};
   uint8_t query[VRT_QUERY_PACKET_LEN] = {0};
   uint64_t out_midpoint;
@@ -193,15 +227,32 @@ int doit(struct rt_server *server){
   /* prepare query */
   uint8_t nonce[VRT_NONCE_SIZE] = "preferably a random byte buffer";
   CHECK(vrt_make_query(nonce, sizeof(nonce), query, sizeof(query), server->variant));
-
+  
   /* send query */
   udp.begin(WiFi.localIP(), server->port);
   udp.beginPacket(server->host, server->port);
+
+  // Gets the current time (us since epoch)
+  uint64_t st = get_time();
+  
+  clock_t function_time, temp;
+  function_time = clock();
+  if(function_time == -1) return -1;
   udp.write(query, sizeof(query));
   udp.endPacket();
-
   while(udp.parsePacket() == 0){}
 
+  // The time it took for the message to be sent and recieved
+  temp = clock();
+  if(temp == -1) return -1;
+  function_time = temp - function_time;
+
+  // Gets current time (us since epoch)
+  uint64_t rt = get_time();
+
+  // Calculates RTT
+  double rtt = ((double)function_time)/CLOCKS_PER_SEC;
+  
   unsigned n = udp.read((char*)recv_buffer, sizeof(query));
   
   if(n > 0)
@@ -211,8 +262,38 @@ int doit(struct rt_server *server){
                             server->public_key, &out_midpoint,
                             &out_radii, server->variant));
 
-    time_t t;
-    if (server->variant == 0) {
+    double uncertainty = (double)out_radii/1000000 + rtt/2;
+
+    //print_server(server->variant, out_midpoint, out_radii);
+    
+    uint64_t local = (st + rt) / 2;
+    double adjustment = 0;
+    uint64_t mjd_time;
+    
+    // Take into account the server version when deciding adjustment
+    if(server->variant == 0){
+      adjustment = ((double)out_midpoint - (double)local)/1000000;
+  
+    }else{
+      unsigned mjd = out_midpoint >> 40;
+      uint64_t microseconds_from_midnight = out_midpoint & 0xffffffffff;
+      mjd_time = (mjd - 40587) * 86400000000 + microseconds_from_midnight;
+      adjustment = ((double)mjd_time - (double)local)/1000000;
+    }
+  
+    // Finds the overlap from the edges
+    if(find_overlap(server_cluster_data, adjustment, uncertainty) == -1){
+      return -1;
+    }
+
+  }
+  return 0;
+}
+
+void print_server(int variant, uint64_t out_midpoint, uint64_t out_radii)
+{
+  time_t t;
+    if (variant == 0) {
       t = out_midpoint / 1000000;
     } else {
     unsigned mjd = out_midpoint >> 40;
@@ -221,11 +302,11 @@ int doit(struct rt_server *server){
   }
 
   unsigned microseconds = out_midpoint % 1000000;
-
+  
   struct tm *tm = gmtime(&t);
 
   printf("midp %" PRIu64 " radi %u\n", out_midpoint, out_radii);
-  printf("%04u-%02u-%02u %02u:%02u:%02u.%06u\n",
+  printf("%04u-%02u-%02u %02u:%02u:%02u.%06u\n\n\n",
    tm->tm_year + 1900,
    tm->tm_mon + 1,
    tm->tm_mday,
@@ -237,6 +318,23 @@ int doit(struct rt_server *server){
    hh = tm->tm_hour;
    mm = tm->tm_min;
    ss = tm->tm_sec;
-  }
-  return 0;
+}
+
+void print_time(double s){
+  time_t t  = s;
+  struct tm *tm = gmtime(&t);
+
+  struct timeval tm1;
+  tm1.tv_sec = s;
+  
+  printf("%04u-%02u-%02u %02u:%02u:%02u\n\n\n",
+   tm->tm_year + 1900,
+   tm->tm_mon + 1,
+   tm->tm_mday,
+   tm->tm_hour,
+   tm->tm_min,
+   tm->tm_sec);
+
+   settimeofday(&tm1, NULL);
+   printf("time: %02u\n",get_time());
 }
