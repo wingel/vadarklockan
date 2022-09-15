@@ -86,7 +86,7 @@ class RoughtimeClient:
                         continue
                     raise RoughtimeError('Timeout while waiting for reply.')
                 # TODO check uid
-                print("got reply", repl, repr(data))
+                #print("got reply", repl, repr(data))
                 if repl_addr == sockaddr[0] and repl_port == sockaddr[1]:
                     break
             recv_time = time.time()
@@ -530,6 +530,32 @@ class RoughtimePacket(RoughtimeTag):
         self.tags.append(tag)
         self.tags.sort(key=lambda x: struct.unpack('<I', x.get_tag_bytes()))
 
+    def verify_replies(self):
+        '''
+        Verifies replies from servers that have been received by the instance.
+
+        Returns:
+            ret (list): A list of pairs containing the indexes of any invalid
+                    pairs. An empty list indicates that no replies appear to
+                    violate causality.
+        '''
+        invalid_pairs = []
+        for i in range(len(self.prev_replies)):
+            packet_i = RoughtimePacket(packet=self.prev_replies[i][2])
+            midp_i = RoughtimeClient.midp_to_datetime(\
+                    packet_i.get_tag('SREP').get_tag('MIDP').to_int())
+            radi_i = datetime.timedelta(microseconds=packet_i.get_tag('SREP')\
+                    .get_tag('RADI').to_int())
+            for k in range(i + 1, len(self.prev_replies)):
+                packet_k = RoughtimePacket(packet=self.prev_replies[k][2])
+                midp_k = RoughtimeClient.midp_to_datetime(\
+                        packet_k.get_tag('SREP').get_tag('MIDP').to_int())
+                radi_k = datetime.timedelta(microseconds=\
+                        packet_k.get_tag('SREP').get_tag('RADI').to_int())
+                if midp_i - radi_i > midp_k + radi_k:
+                    invalid_pairs.append((i, k))
+        return invalid_pairs
+    
     def contains_tag(self, tag):
         '''
         Checks if the packet contains a tag.
