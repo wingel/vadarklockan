@@ -93,7 +93,7 @@ void setup(){
 void loop() {
 
   if (connected){
-    for (int j = 0; j<2; j++){
+    for (int j = 0; j<1; j++){
     server_cluster_data = createClusterData(needed_answers);
     int i;
     for (i = 0; i < sizeof(servers) / sizeof(servers[0]); i++) {
@@ -104,12 +104,13 @@ void loop() {
      }
 
     double adj = get_adjustment(server_cluster_data);
-    time_t t = adj;
     Serial.println("adj: " + String(adj));
-    print_time(adj);
-  
+
+    set_time(adj);
+    Serial.println("Hejsan1");
     // Free the allocated memory (may want to check if there are leaks)
     free_tree(server_cluster_data);
+    Serial.println("Hejsan2");
     }
     connected = false;
   }
@@ -206,8 +207,8 @@ void WiFiEvent(WiFiEvent_t event){
 }
 
 // Uses a time.h function to get the time
-uint64_t get_time(){
-
+uint64_t get_time()
+{
   struct timeval tv;
   gettimeofday(&tv, NULL);
   uint64_t t = 
@@ -215,6 +216,33 @@ uint64_t get_time(){
     (uint64_t)(tv.tv_usec);
 
   return t;
+}
+
+int set_time(double adj)
+{
+  time_t sec = (int)adj;
+  time_t usec = (int)(adj - (int)adj)*10^6;
+  
+  struct timeval tv;
+  tv.tv_sec = sec;
+  tv.tv_usec = usec;
+  settimeofday(&tv, NULL);
+
+  set_clock();
+}
+
+void set_clock()
+{
+  uint64_t curr_time = get_time();
+  
+  time_t t;
+  t = curr_time / 1000000;
+  unsigned microseconds = curr_time % 1000000;
+  struct tm *tm = gmtime(&t);
+
+  hh = tm->tm_hour;
+  mm = tm->tm_min;
+  ss = tm->tm_sec;
 }
 
 int doit(struct rt_server *server, clusteringData *server_cluster_data){
@@ -285,25 +313,13 @@ int doit(struct rt_server *server, clusteringData *server_cluster_data){
     if(find_overlap(server_cluster_data, adjustment, uncertainty) == -1){
       return -1;
     }
-
   }
   return 0;
 }
 
-void print_server(int variant, uint64_t out_midpoint, uint64_t out_radii)
+/*void print_server(int variant, uint64_t out_midpoint, uint64_t out_radii)
 {
-  time_t t;
-    if (variant == 0) {
-      t = out_midpoint / 1000000;
-    } else {
-    unsigned mjd = out_midpoint >> 40;
-    unsigned seconds_from_midnight = (out_midpoint & 0xffffffffff) / 1000000;
-    t = (mjd - 40587) * 86400 + seconds_from_midnight;
-  }
-
-  unsigned microseconds = out_midpoint % 1000000;
-  
-  struct tm *tm = gmtime(&t);
+  struct tm tm = get_gmtime(variant, out_midpoint);
 
   printf("midp %" PRIu64 " radi %u\n", out_midpoint, out_radii);
   printf("%04u-%02u-%02u %02u:%02u:%02u.%06u\n\n\n",
@@ -318,23 +334,4 @@ void print_server(int variant, uint64_t out_midpoint, uint64_t out_radii)
    hh = tm->tm_hour;
    mm = tm->tm_min;
    ss = tm->tm_sec;
-}
-
-void print_time(double s){
-  time_t t  = s;
-  struct tm *tm = gmtime(&t);
-
-  struct timeval tm1;
-  tm1.tv_sec = s;
-  
-  printf("%04u-%02u-%02u %02u:%02u:%02u\n\n\n",
-   tm->tm_year + 1900,
-   tm->tm_mon + 1,
-   tm->tm_mday,
-   tm->tm_hour,
-   tm->tm_min,
-   tm->tm_sec);
-
-   settimeofday(&tm1, NULL);
-   printf("time: %02u\n",get_time());
-}
+}*/
