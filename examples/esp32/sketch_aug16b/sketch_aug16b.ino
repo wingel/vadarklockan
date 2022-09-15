@@ -104,13 +104,10 @@ void loop() {
      }
 
     double adj = get_adjustment(server_cluster_data);
-    Serial.println("adj: " + String(adj));
-
     set_time(adj);
-    Serial.println("Hejsan1");
+    
     // Free the allocated memory (may want to check if there are leaks)
     free_tree(server_cluster_data);
-    Serial.println("Hejsan2");
     }
     connected = false;
   }
@@ -243,6 +240,8 @@ void set_clock()
   hh = tm->tm_hour;
   mm = tm->tm_min;
   ss = tm->tm_sec;
+
+  printf("%02u:%02u:%02u\n", hh, mm, ss);
 }
 
 int doit(struct rt_server *server, clusteringData *server_cluster_data){
@@ -291,8 +290,6 @@ int doit(struct rt_server *server, clusteringData *server_cluster_data){
                             &out_radii, server->variant));
 
     double uncertainty = (double)out_radii/1000000 + rtt/2;
-
-    //print_server(server->variant, out_midpoint, out_radii);
     
     uint64_t local = (st + rt) / 2;
     double adjustment = 0;
@@ -316,22 +313,3 @@ int doit(struct rt_server *server, clusteringData *server_cluster_data){
   }
   return 0;
 }
-
-/*void print_server(int variant, uint64_t out_midpoint, uint64_t out_radii)
-{
-  struct tm tm = get_gmtime(variant, out_midpoint);
-
-  printf("midp %" PRIu64 " radi %u\n", out_midpoint, out_radii);
-  printf("%04u-%02u-%02u %02u:%02u:%02u.%06u\n\n\n",
-   tm->tm_year + 1900,
-   tm->tm_mon + 1,
-   tm->tm_mday,
-   tm->tm_hour,
-   tm->tm_min,
-   tm->tm_sec,
-   microseconds);
-
-   hh = tm->tm_hour;
-   mm = tm->tm_min;
-   ss = tm->tm_sec;
-}*/
