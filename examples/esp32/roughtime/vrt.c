@@ -108,7 +108,7 @@ void rt_query_add_tag(struct rt_builder *builder, uint32_t tag,
     assert((size & 3) == 0);
     assert(builder->data_ptr + size <= builder->buffer + RT_MAX_PACKET_SIZE);
 
-    fprintf(stderr, "%s: %u, 0x%04x\n", __func__, builder->current_tag, tag);
+    //fprintf(stderr, "%s: %u, 0x%04x\n", __func__, builder->current_tag, tag);
 
     if (builder->current_tag) {
         assert(rt_get_uint32(&builder->tag_ptr[builder->current_tag - 1]) < tag);
