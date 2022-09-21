@@ -66,7 +66,6 @@ class RoughtimeClient:
             sock.settimeout(0.100)
             send_time = time.time()
             try:
-                print("send")
                 sock.sendto(packet, (sockaddr[0], sockaddr[1]))
             except Exception as ex:
                 # Try next IP on failure.
@@ -76,19 +75,21 @@ class RoughtimeClient:
             # Wait for reply
             while True:
                 try:
-                    print("waiting for reply")
                     data, repl = sock.recvfrom(1500)
                     repl_addr = repl[0]
                     repl_port = repl[1]
-                except Exception as e: # socket.timeout:
-                    print("exception", e)
+                except OSError as e:
+                    if not 'ETIMEDOUT' in str(e):
+                        raise
                     if time.time() - send_time < timeout:
                         continue
                     raise RoughtimeError('Timeout while waiting for reply.')
-                # TODO check uid
-                #print("got reply", repl, repr(data))
+
+                # TODO do an early uid check
+
                 if repl_addr == sockaddr[0] and repl_port == sockaddr[1]:
                     break
+
             recv_time = time.time()
             rtt = recv_time - send_time
             sock.close()
@@ -203,6 +204,8 @@ class RoughtimeClient:
         if protocol == 'udp':
             packet.add_padding()
         packet = packet.get_value_bytes(packet_header=newver)
+
+        print("Trying %s:%s" % (address, port))
 
         if protocol == 'udp':
             reply, st, rt, data = self.__udp_query(address, port, packet, timeout)
@@ -555,7 +558,7 @@ class RoughtimePacket(RoughtimeTag):
                 if midp_i - radi_i > midp_k + radi_k:
                     invalid_pairs.append((i, k))
         return invalid_pairs
-    
+
     def contains_tag(self, tag):
         '''
         Checks if the packet contains a tag.

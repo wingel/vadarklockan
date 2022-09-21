@@ -6,18 +6,20 @@ import sys
 import json
 import random
 import os
+import gc
 
 #from __future__ import division, print_function, unicode_literals
 
 cl = rt.RoughtimeClient()
 
+import rt_config
 
 sta = network.WLAN(network.STA_IF)
 if not sta.active():
     sta.active(True)
 
-    sta.scan()
-    sta.connect('Test123', 'gv28985v')
+    # print(sta.scan())
+    sta.connect(rt_config.WLAN_SSID, rt_config.WLAN_PASSWORD)
 
 while not sta.isconnected():
     pass
@@ -87,13 +89,11 @@ class SelectionAlgorithm(object):
                 break
 
         else:
-            print('false')
             return False
 
         self.adjustment = (lo + hi) / 2
         self.uncertainty = (hi - lo) / 2
-        
-        print('True')
+
         return True
 
 class Server(object):
@@ -111,7 +111,7 @@ class Server(object):
         return "%s:%s" % (self.addr, self.port)
 
     def query(self):
-        
+
         host = self.addr
         port = self.port
         pubkey = binascii.a2b_base64(self.pubkey)
@@ -122,23 +122,23 @@ class Server(object):
 
 
         repl = cl.query(host, port, pubkey, timeout = 2, newver = newver)
-        
+
 #         repl = self.cl.query(self.addr, self.port, self.pubkey, 2, self.newver, self.proto)
-        
+
 
 
         self.st = repl['st']
-        self.rt = repl['rt']        
-        self.remote = repl['datetime']        
+        self.rt = repl['rt']
+        self.remote = repl['datetime']
         # TODO check that radi >= 0
         self.radi = repl['radi']*1E-6
         self.rtt  = repl['rtt']
-        
-        
+
+
         self.local = ((self.st + self.rt) / 2)
 
-        
-        
+
+
         self.uncertainty = self.radi + self.rtt / 2
 
         # How much to adjust the local clock to set it to match the
@@ -148,7 +148,7 @@ class Server(object):
 
 
 class testsingle():
-    
+
     host = 'sth1.roughtime.netnod.se'
     port = 2002
     pubkey = binascii.a2b_base64('9l1JN4HakGnG44yyqyNNCb0HN0XfsysBbnl/kbZoZDc=')
@@ -176,14 +176,14 @@ class testsingle():
             print('Delegate key validity end:   %s' %
                     repr(time.gmtime((repl['maxt']))))
     #print('Merkle tree path length: %d' % repl['pathlen'])
-            
 
-    
+
+
 class testMore():
     # Query a list of servers in a JSON file.
     with open('ecosystem.json') as f:
         servers = json.load(f)['servers']
-        
+
     cl = rt.RoughtimeClient()
 
     servers = [ Server(cl, _) for _ in servers ]
@@ -192,7 +192,7 @@ class testMore():
 
 #     try all servers a couple of times simulating that we have more
     servers = servers * 3
-    
+
     def random_shuffle(seq):
         l = len(seq)
         for i in range(l):
@@ -205,11 +205,14 @@ class testMore():
     algorithm = SelectionAlgorithm(10)
 
     last_wanted = 0
-    
+
     for server in servers:
+        # Force garbage collection to run
+        gc.collect()
+
         try:
             server.query()
-            
+
 
             print('%-38s local %s remote %s adj %9.0f us rtt %7.0f us radi %7.0f us' % (
 #                 server, server.local, server.remote, server.adjustment * 1E6, server.rtt * 1E6, server.radi * 1E6))
@@ -220,7 +223,6 @@ class testMore():
             continue
 
         if algorithm.handle(server):
-            print()
             print("success with %u/%u clocks adjust %+.0f us uncertainty %.0f us" % (
                 algorithm.wanted, len(algorithm.responses),
                 algorithm.adjustment,
@@ -239,6 +241,8 @@ class testMore():
                     else:
                         # print("ok: %s" % resp)
                         pass
+
+            print()
 
             # assert last_wanted <= algorithm.wanted
             last_wanted = algorithm.wanted
