@@ -25,11 +25,29 @@ cd MicroPython_BUILD/components/mpy_cross_build
 make
 ```
 
-Korskompilera och ladda upp en fil till filsystemet på ESP32:
+Kopiera "rt_config.py.example" till "rt_config.py" och ändra den filen
+så att den har rätt WLAN_SSID och WLAN_PASSWORD, samt ladda upp den
+och "ecosystem.json" till filsystemet på ESP32:
+
+```
+ampy --port /dev/ttyACM0 --baud 115200 put rt_config.py /flash/rt_config.py
+ampy --port /dev/ttyACM0 --baud 115200 put ecosystem.json /flash/ecosystem.json
+```
+
+Korskompilera "rt.py" till "rt.mpy" och ladda upp den till filsystemet
+på ESP32:
 
 ```
 MicroPython_BUILD/components/mpy_cross_build/mpy-cross/mpy-cross rt.py
 ampy --port /dev/ttyACM0 --baud 115200 put rt.mpy /flash/rt.mpy
 ```
 
-Sen kan man köra "rtm.py" via thonny.
+Nu kan man köra "rt_main.py" via thonny.
+
+Alternativt så kan man använda "run.py" för att både kors-kompilera
+och ladda upp filer till ESP32.  Modifiera konfigurationen i början på
+run.py så att sökvägarna till /dev/ttyACM0 och mpy-cross stämmer.
+
+```
+python3 run.py
+```
