@@ -82,13 +82,11 @@ def main():
 
     servers = [ Server(cl, _) for _ in servers ]
 
-    # servers = servers[:6]
-
     # Try all servers a couple of times simulating that we have more
     # The first 7 servers should be good, the rest are falsetickers,
     # so use the good ones more often so that we will have a majority
     # of good ones.
-    servers = servers[:7] * 2 + servers
+    servers = servers[:7] + servers[7:12]
 
     random_shuffle(servers)
 
@@ -103,6 +101,7 @@ def main():
     for server in servers:
         # Force garbage collection to run
         gc.collect()
+        print("memory free", gc.mem_free())
 
         if 0 and server.addr.startswith('false'):
             continue
@@ -139,7 +138,17 @@ def main():
                 uncertainty * 1E6))
             print()
 
-            # This is a good place to set the clock and break out of the loop
+            if 1:
+                # This is a good place to set the clock and break out of the loop
+                t0 = time.time()
+                tn = t0 + adjustment
+                time.settime(tn)
+                t1 = time.time()
+                print("adjust %+.0f us" % (adjustment * 1E6))
+                print("t0", format_time(t0), t0)
+                print("tn", format_time(tn), tn)
+                print("t1", format_time(t1), t1)
+                break
 
             # Getting more responses should always give more overlaps, never fewer
             assert last_res <= res
