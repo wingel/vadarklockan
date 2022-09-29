@@ -335,8 +335,8 @@ class RoughtimeClient:
                 continue
 
             # Wait for reply
-            start_time = time.monotonic()
-            while time.monotonic() - start_time < timeout:
+            start_time = time.time()
+            while time.time() - start_time < timeout:
                 try:
                     data, repl = sock.recvfrom(1500)
                     repl_addr = repl[0]
@@ -345,7 +345,7 @@ class RoughtimeClient:
                     continue
                 if repl_addr == sockaddr[0] and repl_port == sockaddr[1]:
                     break
-            rtt = time.monotonic() - start_time
+            rtt = time.time() - start_time
             sock.close()
             if rtt >= timeout:
                 # Try next IP on timeout.
@@ -373,9 +373,9 @@ class RoughtimeClient:
                 continue
 
             # Wait for reply
-            start_time = time.monotonic()
+            start_time = time.time()
             buf = bytes()
-            while time.monotonic() - start_time < timeout:
+            while time.time() - start_time < timeout:
                 try:
                     buf += sock.recv(4096)
                 except socket.timeout:
@@ -389,7 +389,7 @@ class RoughtimeClient:
                     continue
                 data = buf[:repl_len + 12]
                 break
-            rtt = time.monotonic() - start_time
+            rtt = time.time() - start_time
             sock.close()
             if rtt >= timeout:
                 # Try next IP on timeout.
