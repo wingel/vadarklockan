@@ -1,0 +1,101 @@
+{
+  "servers": [
+    {
+      "name": "Caesium",
+      "publicKeyType": "ed25519",
+      "publicKey": "iBVjxg/1j7y1+kQUTBYdTabxCppesU/07D4PMDJk2WA=",
+      "newver": false,
+      "addresses": [
+        {
+          "protocol": "udp",
+          "address": "caesium.tannerryan.ca:2002"
+        }
+      ]
+    },
+    {
+      "name": "Chainpoint-Roughtime",
+      "publicKeyType": "ed25519",
+      "publicKey": "bbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE=",
+      "newver": false,
+      "addresses": [
+        {
+          "protocol": "udp",
+          "address": "roughtime.chainpoint.org:2002"
+        }
+      ]
+    },
+    {
+      "name": "Cloudflare-Roughtime",
+      "publicKeyType": "ed25519",
+      "publicKey": "gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo=",
+      "newver": false,
+      "addresses": [
+        {
+          "protocol": "udp",
+          "address": "roughtime.cloudflare.com:2002"
+        }
+      ]
+    },
+
+    {
+      "name": "dnov",
+      "publicKeyType": "ed25519",
+      "publicKey": "hlKAFAeU+xDZ1+9eVgrXel+m3sRiSlzoqCsqL9WoRB0=",
+      "newver": true,
+      "addresses": [
+        {
+          "protocol": "udp",
+          "address": "roughtime.dnov.se:2002"
+        }
+      ]
+    },
+    {
+      "name": "Google-Sandbox-Roughtime",
+      "publicKeyType": "ed25519",
+      "publicKey": "etPaaIxcBMY1oUeGpwvPMCJMwlRVNxv51KK/tktoJTQ=",
+      "newver": false,
+      "addresses": [
+        {
+          "protocol": "udp",
+          "address": "roughtime.sandbox.google.com:2002"
+        }
+      ]
+    },
+    {
+      "name": "int08h-Roughtime",
+      "publicKeyType": "ed25519",
+      "publicKey": "AW5uAoTSTDfG5NfY1bTh08GUnOqlRb+HVhbJ3ODJvsE=",
+      "newver": false,
+      "addresses": [
+        {
+          "protocol": "udp",
+          "address": "roughtime.int08h.com:2002"
+        }
+      ]
+    },
+    {
+      "name": "roughtime.se",
+      "publicKeyType": "ed25519",
+      "publicKey": "S3AzfZJ5CjSdkJ21ZJGbxqdYP/SoE8fXKY0+aicsehI=",
+      "newver": true,
+      "addresses": [
+        {
+          "protocol": "udp",
+          "address": "roughtime.se:2002"
+        }
+      ]
+    },
+    {
+      "name": "sjwheel",
+      "publicKeyType": "ed25519",
+      "publicKey": "4dq0SCJOPeES7DayXwqVs0936BfATfQp5ZMiRpFV60w=",
+      "newver": false,
+      "addresses": [
+        {
+          "protocol": "udp",
+          "address": "roughtime-cn.sjwheel.net:2002"
+        }
+      ]
+    }
+  ]
+}
