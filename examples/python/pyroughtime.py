@@ -356,7 +356,7 @@ class RoughtimeClient:
             raise RoughtimeError('Timeout while waiting for reply.')
         reply = RoughtimePacket(packet=data)
 
-        return reply, rtt, data
+        return reply, start_time, rtt, data
 
     @staticmethod
     def __tcp_query(address, port, packet, timeout):
@@ -400,7 +400,7 @@ class RoughtimeClient:
             raise RoughtimeError('Timeout while waiting for reply.')
         reply = RoughtimePacket(packet=data)
 
-        return reply, rtt, data
+        return reply, start_time, rtt, data
 
     def query(self, address, port, pubkey, timeout=2, newver=True,
             protocol='udp'):
@@ -461,9 +461,9 @@ class RoughtimeClient:
         packet = packet.get_value_bytes(packet_header=newver)
 
         if protocol == 'udp':
-            reply, rtt, data = self.__udp_query(address, port, packet, timeout)
+            reply, start_time, rtt, data = self.__udp_query(address, port, packet, timeout)
         else:
-            reply, rtt, data = self.__tcp_query(address, port, packet, timeout)
+            reply, start_time, rtt, data = self.__tcp_query(address, port, packet, timeout)
 
         # Get reply tags.
         srep = reply.get_tag('SREP')
@@ -571,6 +571,7 @@ class RoughtimeClient:
             ret['prettytime'] = "%s UTC (+/- %.3f ms)" % (timestr, radi / 1E3)
         else:
             ret['prettytime'] = "%s UTC (+/- %.3f  s)" % (timestr, radi / 1E6)
+        ret['start_time'] = start_time
         ret['rtt'] = rtt
         ret['mint'] = RoughtimeClient.midp_to_datetime(mint)
         ret['maxt'] = RoughtimeClient.midp_to_datetime(maxt)
