@@ -51,8 +51,10 @@ class SelectionAlgorithm(object):
         self.responses.append(resp)
         edges = []
         for resp in self.responses:
-            edges.append((resp.adjustment - resp.uncertainty, -1))
-            edges.append((resp.adjustment + resp.uncertainty, +1))
+            lo, hi = resp.get_adjustment_range()
+
+            edges.append((lo, -1))
+            edges.append((hi, +1))
 
         edges.sort()
 
@@ -107,29 +109,28 @@ class Server(object):
     def query(self):
         repl = self.cl.query(self.addr, self.port, self.pubkey, 2, self.newver, self.proto)
 
-        self.st = repl['start_time']
-        self.rt = self.st + repl['rtt']
-        self.remote = repl['datetime']
+        self.transmit_time = repl['start_time']
+        self.receive_time = self.transmit_time + repl['rtt']
+        self.remote_time = repl['datetime']
         # TODO check that radi >= 0
         self.radi = repl['radi']*1E-6
-        self.rtt  = repl['rtt']
-
-        self.local = datetime.utcfromtimestamp((self.st + self.rt) / 2)
-        self.uncertainty = self.radi + self.rtt / 2
-
-        # How much to adjust the local clock to set it to match the
-        # remote clock
-        self.adjustment = (self.remote - self.local).total_seconds()
 
         statf.write(json.dumps({
             'server': repr(self),
-            'st' : self.st,
-            'rt' : self.rt,
-            'remote' : self.remote.replace(tzinfo=timezone.utc).timestamp(),
+            'transmit_time' : self.transmit_time,
+            'receive_time' : self.receive_time,
+            'remote_time' : self.remote_time.replace(tzinfo=timezone.utc).timestamp(),
             'radi' : self.radi,
-            'rtt' : self.rtt,
             }) + '\n')
         statf.flush()
+
+    def get_adjustment_range(self):
+        rtt = self.receive_time - self.transmit_time
+        local_time = datetime.utcfromtimestamp(self.transmit_time + rtt / 2)
+        adjustment = (self.remote_time - local_time).total_seconds()
+        uncertainty = rtt / 2 + self.radi
+
+        return adjustment - uncertainty, adjustment + uncertainty
 
 def main():
     # Query a list of servers in a JSON file.
@@ -143,7 +144,7 @@ def main():
     # servers = servers[:6]
 
     # Try all servers a couple of times simulating that we have more
-    servers = servers * 3
+    servers = servers * 5
 
     random.shuffle(servers)
 
@@ -154,14 +155,27 @@ def main():
 
     last_wanted = 0
     for server in servers:
-        if 0 and server.addr.startswith('false'):
+        if 1 and server.addr.startswith('false'):
+            continue
+
+        if 0 and 'netnod' not in server.addr:
             continue
 
         try:
             server.query()
 
+            rtt = server.receive_time - server.transmit_time
+            local_time = datetime.utcfromtimestamp(server.transmit_time + rtt / 2)
+
+            # How much to adjust the local clock to set it to match the
+            # remote clock, assuming that the delays are symmetric
+            adjustment = (server.remote_time - local_time).total_seconds()
+
+            uncertainty = rtt / 2 + server.radi
+
             print('%-38s local %s remote %s adj %9.0f us rtt %7.0f us radi %7.0f us' % (
-                server, server.local, server.remote, server.adjustment * 1E6, server.rtt * 1E6, server.radi * 1E6))
+                server, local_time, server.remote_time,
+                adjustment * 1E6, rtt * 1E6, server.radi * 1E6))
 
         except Exception as e:
             print('%-38s Exception: %s' % (server, e))
@@ -174,7 +188,7 @@ def main():
                 algorithm.adjustment * 1E6,
                 algorithm.uncertainty * 1E6))
 
-            if 1:
+            if 0:
                 for resp in algorithm.responses:
                     if resp.adjustment + resp.uncertainty < algorithm.adjustment - algorithm.uncertainty:
                         if not repr(resp).startswith('falseticker'):
@@ -191,7 +205,7 @@ def main():
             # assert last_wanted <= algorithm.wanted
             last_wanted = algorithm.wanted
 
-            assert algorithm.adjustment < 1E-3
+            # assert algorithm.adjustment < 1E-3
 
 if __name__ == '__main__':
     main()
