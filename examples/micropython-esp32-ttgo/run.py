@@ -28,7 +28,7 @@ ESP_BAUD = 115200
 ESP_DELAY = 0
 
 # Top python code to run on the ESP32
-TOP = 'rt_main.py'
+TOP = 'algotest.py'
 
 # Python modules and other dependencies that should be uploaded to the
 # file system on the ESP32.
@@ -45,7 +45,7 @@ TOP = 'rt_main.py'
 # the corresponding ".py" file first.  This will speed up loading of
 # modules slightly and can also allow larger python modules since
 # micropython often will run out of memory with plain ".py" modules.
-DEPENDENCIES = [ 'rt.mpy', 'rt_config.py', 'ecosystem.json' ]
+DEPENDENCIES = [ 'pyroughtime.mpy', 'overlap.py', 'wifi_config.py', 'ecosystem.json' ]
 
 ########################################################################
 # The following code is based on code from ampy.  See the MIT license
@@ -152,9 +152,15 @@ def main():
         if fn.endswith('.mpy'):
             py_fn = fn[:-4] + '.py'
             mpy_fn = fn
-            mpy_st = os.stat(fn)
-            py_st = os.stat(py_fn)
-            if mpy_st.st_mtime < py_st.st_mtime:
+            compile = False
+            if os.path.exists(fn):
+                mpy_st = os.stat(fn)
+                py_st = os.stat(py_fn)
+                if mpy_st.st_mtime < py_st.st_mtime:
+                    compile = True
+            else:
+                compile = True
+            if compile:
                 print("compiling %s -> %s" % (py_fn, mpy_fn))
                 s = os.system('%s \'%s\'' % (MPY_CROSS, py_fn))
                 if s:
@@ -174,7 +180,7 @@ def main():
     if need_reset:
         print("resetting")
         helper.reset()
-    print("run")
+    print("run %s" % TOP)
     helper.run(TOP)
 
 if __name__ == '__main__':

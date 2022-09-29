@@ -64,7 +64,7 @@ class RoughtimeClient:
                 socket.getaddrinfo(address, port):
             sock = socket.socket(family, socket.SOCK_DGRAM)
             sock.settimeout(0.100)
-            send_time = time.time()
+            start_time = time.time()
             try:
                 sock.sendto(packet, (sockaddr[0], sockaddr[1]))
             except Exception as ex:
@@ -81,7 +81,7 @@ class RoughtimeClient:
                 except OSError as e:
                     if not 'ETIMEDOUT' in str(e):
                         raise
-                    if time.time() - send_time < timeout:
+                    if time.time() - start_time < timeout:
                         continue
                     raise RoughtimeError('Timeout while waiting for reply.')
 
@@ -91,7 +91,7 @@ class RoughtimeClient:
                     break
 
             recv_time = time.time()
-            rtt = recv_time - send_time
+            rtt = recv_time - start_time
             sock.close()
             if rtt >= timeout:
                 # Try next IP on timeout.
@@ -101,51 +101,7 @@ class RoughtimeClient:
 
         reply = RoughtimePacket(packet=data)
 
-        return reply, send_time, recv_time, data
-
-    @staticmethod
-    def __tcp_query(address, port, packet, timeout):
-        for family, type_, proto, canonname, sockaddr in \
-                socket.getaddrinfo(address, port, type=socket.SOCK_STREAM):
-            sock = socket.socket(family, socket.SOCK_STREAM)
-            sock.settimeout(timeout)
-            try:
-                sock.connect((sockaddr[0], sockaddr[1]))
-                sock.sendall(packet)
-            except Exception as ex:
-                # Try next IP on failure.
-                sock.close()
-                continue
-
-            # Wait for reply
-            start_time = time.monotonic()
-            buf = bytes()
-            while time.monotonic() - start_time < timeout:
-                try:
-                    buf += sock.recv(4096)
-                except socket.timeout:
-                    continue
-                if len(buf) < 12:
-                    continue
-                (magic, repl_len) = struct.unpack('<QI', buf[:12])
-                if magic != 0x4d49544847554f52:
-                    raise RoughtimeError('Bad packet header.')
-                if repl_len + 12 > len(buf):
-                    continue
-                data = buf[:repl_len + 12]
-                break
-            rtt = time.monotonic() - start_time
-            sock.close()
-            if rtt >= timeout:
-                # Try next IP on timeout.
-                continue
-            # Break out of loop if successful.
-            break
-        if rtt >= timeout:
-            raise RoughtimeError('Timeout while waiting for reply.')
-        reply = RoughtimePacket(packet=data)
-
-        return reply, rtt, data
+        return reply, start_time, rtt, data
 
     def query(self, address, port, pubkey, timeout=2, newver=True,
             protocol='udp'):
@@ -208,9 +164,9 @@ class RoughtimeClient:
         print("Trying %s:%s" % (address, port))
 
         if protocol == 'udp':
-            reply, st, rt, data = self.__udp_query(address, port, packet, timeout)
+            reply, start_time, rtt, data = self.__udp_query(address, port, packet, timeout)
         else:
-            reply, st, rt, data = self.__tcp_query(address, port, packet, timeout)
+            reply, start_time, rtt, data = self.__tcp_query(address, port, packet, timeout)
 
         # Get reply tags.
         srep = reply.get_tag('SREP')
@@ -313,16 +269,15 @@ class RoughtimeClient:
         ret = dict()
         ret['midp'] = midp
         ret['radi'] = radi
-        ret['datetime'] = RoughtimeClient.midp_to_datetime(midp)
+        ret['timestamp'] = RoughtimeClient.midp_to_datetime(midp)
         # timestr = ret['datetime'].strftime('%Y-%m-%d %H:%M:%S.%f')
-        timestr = repr(time.gmtime(int(ret['datetime'])))
+        timestr = repr(time.gmtime(int(ret['timestamp'])))
         if radi < 10000:
             ret['prettytime'] = "%s UTC (+/- %.3f ms)" % (timestr, radi / 1E3)
         else:
             ret['prettytime'] = "%s UTC (+/- %.3f  s)" % (timestr, radi / 1E6)
-        ret['st'] = st
-        ret['rt'] = rt
-        ret['rtt'] = rt - st
+        ret['start_time'] = start_time
+        ret['rtt'] = rtt
         ret['mint'] = RoughtimeClient.midp_to_datetime(mint)
         ret['maxt'] = RoughtimeClient.midp_to_datetime(maxt)
         ret['pathlen'] = pathlen

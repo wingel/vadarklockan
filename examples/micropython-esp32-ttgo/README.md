@@ -1,3 +1,33 @@
+# Vad är klockan example based on pyroughtime
+
+This is an example based on Marcus Dansarie's Python implementation of
+roughtime called
+[pyroughtime](https://github.com/dansarie/pyroughtime).
+
+This example will work with a modified version of [MicroPython for the
+ESP32 TTGO
+platform](https://github.com/wingel/MicroPython_ESP32_psRAM_LoBo ).
+The modifications add support for ed25519 and sha512 which are
+required by roughtime.
+
+pyroughtime.py in this example has been heavily modified, everything
+not neccesary for a roughtime client has been stripped out.  Since
+MicroPython does not have the datetime module it has been replaced
+with unix time_t variants.  The ed25519 and sha512 calls use smaller
+variants found in the modified version of MicroPython.
+
+overlap.py is an implementation of the "find overlaps" part of the
+selection and clustering algorithm RFC5905.  It is the same as in
+../examples/overlap.py.
+
+algotest.py is finally the implementation of "vad är klockan" which
+uses rougthime in combination with the find overlaps algorithm to find
+out how to adhust a local clock in a reasonably secure way.
+
+# Stuff in swedish
+
+TODO this should be translated to english
+
 Installera lite saker som behövs
 
 ```
