@@ -4,14 +4,19 @@ import os
 import sys
 import unittest
 import cffi
+import atexit
 
 import test_overlap
 from test_overlap import *
 
+def run(cmd):
+    print(cmd)
+    ec = os.system(cmd)
+    if ec:
+        sys.exit(ec)
+
 # Build a library with the C code we want to test
-ec = os.system('gcc -Wall -g -shared -o liboverlap_algo.so overlap_algo.c')
-if ec:
-    sys.exit(ec)
+run('gcc -Wall -g -shared -o liboverlap_algo.so overlap_algo.c')
 
 # Create a CFFI interface to the library
 ffi = cffi.FFI()
@@ -22,8 +27,15 @@ lib = ffi.dlopen('./liboverlap_algo.so')
 class COverlapAlgorithm(object):
     def __init__(self):
         self.algo = lib.overlap_new()
+        global fnum
+        self.var = 'algo%d' % fnum
+        fnum += 1
+
+        fr.write('    struct overlap_algo *%s = overlap_new();\n' % self.var)
 
     def add(self, lo, hi):
+        fr.write('    overlap_add(%s, %s, %s);\n' % (self.var, lo, hi))
+
         if not lib.overlap_add(self.algo, lo, hi):
             raise ValueError("invalid parameters to add")
 
@@ -32,19 +44,49 @@ class COverlapAlgorithm(object):
         hi_p = ffi.new('double [1]')
         r = lib.overlap_find(self.algo, lo_p, hi_p)
         if r:
-            return r, lo_p[0], hi_p[0]
+            res = (r, lo_p[0], hi_p[0])
         else:
-            return 0, None, None
+            res = (0, None, None)
+
+        fr.write('    overlap_find(%s, &lo, &hi);\n' % (self.var))
+
+        return res
 
     def __del__(self):
+        fr.write('    overlap_del(%s);\n' % (self.var))
         lib.overlap_del(self.algo)
 
 test_overlap.ALGOS.append(COverlapAlgorithm)
+test_overlap.RANDOM_COUNT = 1000
+
+fhead = '''
+#include "overlap_algo.h"
+
+int main()
+{
+    overlap_value_t lo, hi;
+'''
+
+ftail = '''
+    return 0;
+}
+'''
 
 def main():
-    unittest.main(verbosity = 2)
+    unittest.main(verbosity = 2, exit = False)
 
 if __name__ == '__main__':
     print()
+
+    fnum = 0
+    fr = open('overlap_replay.c', 'w')
+    fr.write(fhead)
+
     main()
 
+    fr.write(ftail)
+    fr.close()
+
+run('gcc -Wall -g -o overlap_replay overlap_replay.c overlap_algo.c')
+
+run('valgrind -s --leak-check=yes ./overlap_replay')

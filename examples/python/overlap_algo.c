@@ -25,6 +25,8 @@ void overlap_del(struct overlap_algo *algo)
         algo->_head = algo->_head->_next;
         free(edge);
     }
+
+    free(algo);
 }
 
 /* Allocate and insert a new edge in sorted edge list.
