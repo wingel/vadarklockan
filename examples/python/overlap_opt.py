@@ -1,16 +1,21 @@
 #! /usr/bin/python3
 
-class OverlapAlgorithm(object):
+class OptimizedOverlapAlgorithm(object):
     """Algoritm from RFC5905 A.5.5.1 to find an overlapping range.
 
     This is an iterative process, add a new range and return the
     number of overlaps.  If the number of overlaps is >0 the members
     .lo and .hi will contain be the overlap.
+
+    This is an optimized version which relies on the fact that adding
+    one more measurement will never increase the number of overlaps by
+    more than one.
+
     """
 
     def __init__(self):
         self._edges = []
-        self._responses = 0
+        self._wanted = 0
 
     def handle(self, lo, hi):
         # Add the edges to our list of edges and sort the list
@@ -18,16 +23,15 @@ class OverlapAlgorithm(object):
         self._edges.append((hi, +1))
         self._edges.sort()
 
-        self._responses += 1
+        # Increase the number of wanted overlaps
+        self._wanted += 1
 
-        for allow in range(self._responses):
-            wanted = self._responses - allow
-
+        while self._wanted:
             chime = 0
             lo = None
             for e in self._edges:
                 chime -= e[1]
-                if chime >= wanted:
+                if chime >= self._wanted:
                     lo = e[0]
                     break
 
@@ -35,17 +39,17 @@ class OverlapAlgorithm(object):
             hi = None
             for e in reversed(self._edges):
                 chime += e[1]
-                if chime >= wanted:
+                if chime >= self._wanted:
                     hi = e[0]
                     break
 
             if lo is not None and hi is not None and lo <= hi:
                 break
 
+            self._wanted -= 1
         else:
-            return 0
+            return self._wanted
 
         self.lo = lo
         self.hi = hi
-
-        return wanted
+        return self._wanted
