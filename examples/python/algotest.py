@@ -127,7 +127,7 @@ def main():
 
         responses += 1
         lo, hi = server.get_adjustment_range()
-        res = algorithm.handle(lo, hi)
+        res = algorithm.process(lo, hi)
         if res >= responses // 2 and res >= wanted:
             adjustment = (algorithm.hi + algorithm.lo) / 2
             uncertainty = (algorithm.hi - algorithm.lo) / 2

@@ -17,14 +17,21 @@ class OptimizedOverlapAlgorithm(object):
         self._edges = []
         self._wanted = 0
 
-    def handle(self, lo, hi):
+    def add(self, lo, hi):
+        if lo > hi:
+            raise ValueError("lo must not be higher than hi")
+
         # Add the edges to our list of edges and sort the list
         self._edges.append((lo, -1))
         self._edges.append((hi, +1))
         self._edges.sort()
 
-        # Increase the number of wanted overlaps
+        # Increase the number of possible overlaps
         self._wanted += 1
+
+    def find(self):
+        if not self._wanted:
+            return 0, None, None
 
         while self._wanted:
             chime = 0
@@ -47,9 +54,5 @@ class OptimizedOverlapAlgorithm(object):
                 break
 
             self._wanted -= 1
-        else:
-            return self._wanted
 
-        self.lo = lo
-        self.hi = hi
-        return self._wanted
+        return self._wanted, lo, hi

@@ -12,13 +12,20 @@ class OverlapAlgorithm(object):
         self._edges = []
         self._responses = 0
 
-    def handle(self, lo, hi):
+    def add(self, lo, hi):
+        if lo > hi:
+            raise ValueError("lo must not be higher than hi")
+
         # Add the edges to our list of edges and sort the list
         self._edges.append((lo, -1))
         self._edges.append((hi, +1))
         self._edges.sort()
 
         self._responses += 1
+
+    def find(self):
+        if not self._responses:
+            return 0, None, None
 
         for allow in range(self._responses):
             wanted = self._responses - allow
@@ -39,13 +46,7 @@ class OverlapAlgorithm(object):
                     hi = e[0]
                     break
 
-            if lo is not None and hi is not None and lo <= hi:
+            if lo is not None and hi is not None:
                 break
 
-        else:
-            return 0
-
-        self.lo = lo
-        self.hi = hi
-
-        return wanted
+        return wanted, lo, hi
