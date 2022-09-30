@@ -1,21 +1,16 @@
 #! /usr/bin/python3
 
-class OptimizedOverlapAlgorithm(object):
+class RefOverlapAlgorithm(object):
     """Algoritm from RFC5905 A.5.5.1 to find an overlapping range.
 
     This is an iterative process, add a new range and return the
     number of overlaps.  If the number of overlaps is >0 the members
     .lo and .hi will contain be the overlap.
-
-    This is an optimized version which relies on the fact that adding
-    one more measurement will never increase the number of overlaps by
-    more than one.
-
     """
 
     def __init__(self):
         self._edges = []
-        self._wanted = 0
+        self._responses = 0
 
     def add(self, lo, hi):
         if lo > hi:
@@ -26,19 +21,20 @@ class OptimizedOverlapAlgorithm(object):
         self._edges.append((hi, +1))
         self._edges.sort()
 
-        # Increase the number of possible overlaps
-        self._wanted += 1
+        self._responses += 1
 
     def find(self):
-        if not self._wanted:
+        if not self._responses:
             return 0, None, None
 
-        while self._wanted:
+        for allow in range(self._responses):
+            wanted = self._responses - allow
+
             chime = 0
             lo = None
             for e in self._edges:
                 chime -= e[1]
-                if chime >= self._wanted:
+                if chime >= wanted:
                     lo = e[0]
                     break
 
@@ -46,13 +42,11 @@ class OptimizedOverlapAlgorithm(object):
             hi = None
             for e in reversed(self._edges):
                 chime += e[1]
-                if chime >= self._wanted:
+                if chime >= wanted:
                     hi = e[0]
                     break
 
-            if lo is not None and hi is not None and lo <= hi:
+            if lo is not None and hi is not None:
                 break
 
-            self._wanted -= 1
-
-        return self._wanted, lo, hi
+        return wanted, lo, hi

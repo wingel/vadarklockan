@@ -3,40 +3,76 @@
 import unittest
 import random
 
+from overlap_ref import RefOverlapAlgorithm
 from overlap import OverlapAlgorithm
-from overlap_opt import OptimizedOverlapAlgorithm
 
-ALGOS = [ OverlapAlgorithm, OptimizedOverlapAlgorithm ]
+ALGOS = [ RefOverlapAlgorithm, OverlapAlgorithm ]
+
+VERBOSE = 0
 
 class TestOverlapAlgo(unittest.TestCase):
     def process(self, ranges, expected):
+        # Make sure that all algorithms agree in batch mode
         algos = [ algo() for algo in ALGOS ]
-
-        # Make sure that all algorithms agree at each step
-        for lo, hi in ranges:
-            prev = None
-            for algo in algos:
+        prev = None
+        for algo in algos:
+            for lo, hi in ranges:
                 algo.add(lo, hi)
-                res = algo.find()
-                if prev:
-                    self.assertEqual(prev, res)
-                prev = res
+            res = algo.find()
+            if VERBOSE:
+                print("%-40s %10s %10s %10s" % ((algo.__class__.__name__,) + res))
+            if prev is not None:
+                self.assertAlmostEqual(prev, res)
+            prev = res
+
+        if ranges:
+            # Make sure that all algorithms agree at each step
+            algos = [ algo() for algo in ALGOS ]
+            for lo, hi in ranges:
+                prev = None
+                for algo in algos:
+                    algo.add(lo, hi)
+                    res = algo.find()
+                    if VERBOSE:
+                        print("%-40s %10s %10s %10s" % ((algo.__class__.__name__,) + res))
+                    if prev is not None:
+                        self.assertAlmostEqual(prev, res)
+                    prev = res
+
+            # Make sure that the final result is as expected
+            self.assertAlmostEqual(res, expected)
+
+        if VERBOSE:
+            print("%-40s %10s %10s %10s" % (("expected",) + res))
 
         # Make sure that the final result is as expected
-        self.assertEqual(res, expected)
+        self.assertAlmostEqual(res, expected)
 
     def process2(self, ranges, overlap, n):
+        if VERBOSE:
+            print()
+
         expected = (n, overlap[0], overlap[1])
         # Try with ranges in specified order
         self.process(ranges, expected)
 
         # Try with ranges in reversed order
-        self.process(reversed(ranges), expected)
+        self.process(list(reversed(ranges)), expected)
 
         # Try with ranges in random order a bunch of times
         for i in range(1000):
             random.shuffle(ranges)
             self.process(ranges, expected)
+
+    def test_empty(self):
+        # Empty range
+        self.process2([ ], (None,None), 0)
+
+    def test_invalid(self):
+        # Verify that an exception is thrown if lo is smaller than hi
+        algos = [ algo() for algo in ALGOS ]
+        for algo in algos:
+            self.assertRaises(ValueError, algo.add, 2, 1)
 
     def test_single(self):
         # Single range
