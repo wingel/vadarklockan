@@ -17,7 +17,7 @@ typedef struct EdgeList{
 
 struct clusteringData{
     EdgeList *edge_list;
-    
+
     double lo;
     double hi;
     double adjustment;
@@ -72,11 +72,11 @@ clusteringData* createClusterData(int n){
 void sortedInsert(Edge** root, Edge* new_edge)
 {
     Edge* current;
- 
+
     // if list is empty
     if (*root == NULL)
         *root = new_edge;
- 
+
     // if the node is to be inserted at the beginning
     // of the doubly linked list
     else if ((*root)->value >= new_edge->value) {
@@ -84,26 +84,26 @@ void sortedInsert(Edge** root, Edge* new_edge)
         new_edge->next_edge->prev_edge = new_edge;
         *root = new_edge;
     }
- 
+
     else {
         current = *root;
- 
+
         // locate the node after which the new node
         // is to be inserted
         while (current->next_edge != NULL &&
                current->next_edge->value < new_edge->value){
             current = current->next_edge;
         }
- 
+
         /*Make the appropriate links */
- 
+
         new_edge->next_edge = current->next_edge;
- 
+
         // if the new node is not inserted
         // at the end of the list
         if (current->next_edge != NULL)
             new_edge->next_edge->prev_edge = new_edge;
- 
+
         current->next_edge = new_edge;
         new_edge->prev_edge = current;
     }
@@ -116,6 +116,8 @@ int insertEdge(EdgeList *edge_list, double value, int chime){
     if(new_edge == NULL) return -1;
 
     sortedInsert(&(edge_list->root), new_edge);
+
+    return 0;
 }
 
 void print_tree(clusteringData *server_cluster_data)
@@ -139,17 +141,17 @@ int find_overlap(clusteringData *server_cluster_data, double adjust, double unce
         return -1;
     }
 
-    if(!insertEdge(server_cluster_data->edge_list, adjust+uncert, +1) == -1){
+    if(insertEdge(server_cluster_data->edge_list, adjust+uncert, +1) == -1){
         printf("Right edge fail\n");
         return -1;
     }
-    
+
     int max_allow = server_cluster_data->amount_responses - server_cluster_data->n;
 
     // Too few edges currently added
     if (max_allow < 0){
         return 0;
-    }    
+    }
 
     for(int i = 0; i<=max_allow; i++){
 
@@ -190,9 +192,9 @@ int find_overlap(clusteringData *server_cluster_data, double adjust, double unce
 
         if(lo != 0 && hi != 0 && lo <= hi){
             break;
-        }     
+        }
     }
-      
+
     server_cluster_data->lo = lo;
     server_cluster_data->hi = hi;
     server_cluster_data->adjustment = (lo + hi) / 2;
@@ -204,6 +206,7 @@ int is_overlap(clusteringData *server_cluster_data, int server_lo, int server_hi
     if(server_lo > server_cluster_data->hi || server_hi < server_cluster_data->lo){
         return 0;
     }
+    return 1;
 }
 
 double get_adjustment(clusteringData *server_cluster_data)
