@@ -6,6 +6,8 @@ import unittest
 import cffi
 import atexit
 
+sys.path.append('../python')
+
 import test_overlap
 from test_overlap import *
 
