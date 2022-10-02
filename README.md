@@ -184,3 +184,10 @@ svarar med orrekt tid, så har Netnod även satt upp flera
 Roughtime-srvrar som svarar med inkorrekt tid
 (falseticker.roughtime.netnod.se).
 
+# Genomförande
+
+Projektet "Vad är klockan?" har genomförst under 2022 av Calle
+Lindkvist (C-implementation), Filip Eriksson (Python-implementation)
+under handledning av Christer Weinigel (C/Python och
+severinfrastruktur hos Netnod samt paketering och dokumentation).
+
