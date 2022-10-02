@@ -99,6 +99,11 @@ För implementations-delen av har vi valt att göra två implementationer.
 
 ## Referensplattformar
 
+Dessa implementationer behöver sedan lite klisterkod för att köra på
+den målplattform man har valt.  Vi har valt två målplattformar till
+att börja med, men det bör vara enkelt att porta koden till andra
+plattformar.
+
 * Utvecklingen av både Python- och C-implementationerna har skett på
   en dator körandes Linux.  Den mesta koden är plattformsoberoende,
   men det har behövs lite plattformsspecifik klisterkod.  Samma kod
