@@ -55,8 +55,8 @@ denna metod som ska kunna vara till nytta för så många som möjligt.
 Metoden kan konceptuellt delas upp i två delar:
 
 * Att på ett säkert sätt få svar på frågan "vad är klockan?" genom att
-  prata med en tids-server.  Det finns en "draft" på protokoll som
-  heter "Roughtime" som gör detta och som vi valt att använda.
+  prata med en tids-server.  Det finns en IETF draft av ett protokoll
+  som heter "Roughtime" som gör detta och som vi valt att använda.
 
 * Även om man kan ställa säkra frågor så är det inte säkert att
   tids-servern man pratar med ger korrekt tid.  En tids-server kan ha
@@ -69,6 +69,14 @@ Metoden kan konceptuellt delas upp i två delar:
   överensstämmer.  Vi har valt att utgå från den "selection and
   clustering algorithm" som beskrivs i RFC5906.
 
+Genom att separera protokollet för att prata med tids-servrar från
+algoritmen för att välja ut vilka man ska lita på så är det relativt
+lätt att byta ut någon av delarna i framtiden.  Framför allt så kommer
+med stor sannolikhet Roughtime-protokollet att få inkompatibla
+ändringar innan det nått fram till att bli en IETF RFC.  Det kan även
+hända att något annat protokoll för att ställa frågor till
+tids-servrar blir mer populärt i framtiden.
+
 ## Implementation
 
 För implementations-delen av har vi valt att göra två implementationer.
@@ -76,39 +84,98 @@ För implementations-delen av har vi valt att göra två implementationer.
 * En implementation i Python vars mål är att vara lätt att förstå.  Vi
   har utgått från en befintlig implementation av Roughtime-protokollet
   som heter "pyroughtime" av Marcus Dansarie.  Algoritmen för att
-  välja ut vilka tids-servrar skall lita på är nyskriven från grunden.
-  En av fördelarna med Python är att det har varit relativt lätt att
-  simulera och visualisera de algoritmer som används.
+  välja ut vilka tids-servrar man skall lita på är nyskriven från
+  grunden.  En av fördelarna med Python är att det har varit relativt
+  lätt att simulera och visualisera de algoritmer som används.
 
 * En implementation i C vars mål är att vara liten, kompakt, säker och
   som ska gå att använda på så många internet-anslutna enheter som
   möjligt.  De flesta plattformar, allt från små IoT-enheter baserade
   på Arduino, Raspberry Pi, eller en riktig dator som kör Linux,
-  Windows eller MacOS kan köra kod skriven i C.
+  Windows eller MacOS kan köra kod skriven i C.  Stödet för
+  Roughtime-protokollet baseras på en implementation som heter
+  "vroughtime" av Oscar Reparaz.  Algoritmen för att välja ut vilka
+  tids-servrar som ska lita på är en port av Python-koden ovan.
 
 ## Referensplattformar
 
 * Utvecklingen av både Python- och C-implementationerna har skett på
-  en dator körandes Linux.
+  en dator körandes Linux.  Den mesta koden är plattformsoberoende,
+  men det har behövs lite plattformsspecifik klisterkod.  Samma kod
+  borde fungera på även Windows och Unix-baserade operativysstem som
+  MacOS men har inte testats på de plattformarna.
 
 * Utöver det har vi valt att porta implementationen tll en liten
   ESP32-baserad enhet med WiFi för att visa att det även fungerar på
   mindre IoT-enheter.  Den ESP32-baserade plattformen kan köra en
   bantad version av Python-implementationen i en MicroPython-miljö och
-  C-implementationen i en Arduino-miljö.
+  C-implementationen i en Arduino-miljö.  Den ESP32-enheten heter
+  "TTGO" men koden borde gå att köra på de flesta ESP32-enheter och
+  eventuellt även på ESP8266-enheter.
 
 <p align="left">
   <img src="Documentation/ttgo.jpg" width="600" height="400" title="TTGO ESP32">
 </p>
 
+## Implementationsdetaljer Python
 
+"pyroughtime" har från början stöd både för draft 05 och äldre
+versioner av Roughtime.
 
+### Python på Linux
 
+Python-implementationen för Linux finns i examples/python.
 
+Endast några smärre ändringar behövde göras för att fungera med "vad
+är klockan".
 
+### MicroPython på ESP32
 
+Python-implementationen för TTGO ESP32 finns i examples/micropython-esp32-ttgo.
 
+MicroPython på ESP32 har mycket ont om minne och skiljer sig ganska
+mycket från mainline Python.  För att få plats har "pyroughtime"
+behövt bantas och anpassas rejält.
 
+MicroPython för ESP32 har utökats med stöd för de
+krypterings-primitiver som behövs för Roughtime (ed25519, sha512) och
+för att kunna ställa klockan från Python-kod (settimeofday).
 
+## Implementationsdetaljer C
 
+"vroughtime" hade från början inte stöd för draft 05 så koden har
+modifierats så att den stödjer både draft 05 och äldre versioner av
+Roughtime.  Samma kod används både på Linux och på ESP32.
+
+### C på Linux
+
+C-implementationen för Linux finns i examples/C.
+
+Lite klisterkod behövde skrivas för att köra på Linux och för
+UDP-kommunikation via BSD sockets API.  Koden stödjer både IPv4 och
+IPv6.
+
+### C på ESP32.
+
+C-implementationen för Linux finns i examples/esp32..
+
+Lite klisterkod behövde skrivas för att använda WiFi och UDP på ESP32.
+Koden klarar än så länge bara IPv4.
+
+## Roughtime-protokollet
+
+Eftersom Roughtime-protokollet än så länge bara är en "draft" så finns
+det inte så många användsbara tids-servar.  Framför allt finns det
+bara en enda sever-implementation som fullt stödjer (IETF draft
+version 05 av
+Roughtime)[https://tools.ietf.org/html/draft-ietf-ntp-roughtime-05].
+Även denna implementation, skriven i C, är gjord av Marcus Dansarie.
+
+Netnod har valt att sätta upp flera Roughtime-servrar med denna
+implementation (sth1.roughtime.netnod.se och
+sth2.roughtime.netnod.se).  För att underlätta test av hela "vad är
+klockan"-projektet, inklusive delarna med att välja ut servrar som
+svarar med orrekt tid, så har Netnod även satt upp flera
+Roughtime-srvrar som svarar med inkorrekt tid
+(falseticker.roughtime.netnod.se).
 
