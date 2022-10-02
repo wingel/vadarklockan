@@ -186,7 +186,7 @@ Roughtime-srvrar som svarar med inkorrekt tid
 
 # Genomförande
 
-Projektet "Vad är klockan?" har genomförst under 2022 av Calle
+Projektet "Vad är klockan?" har genomförts under 2022 av Calle
 Lindkvist (C-implementation), Filip Eriksson (Python-implementation)
 under handledning av Christer Weinigel (C/Python och
 severinfrastruktur hos Netnod samt paketering och dokumentation).
