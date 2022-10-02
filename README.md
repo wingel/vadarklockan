@@ -1,5 +1,7 @@
 # Vad är Klockan - hur får man tid på ett säkert sätt?
 
+## Introduktion
+
 För att kunna kommunicera säkert på internet så är det viktigt att
 kunna svara på frågan "vad är klockan", alltså säga vad aktuell
 tidpunkt är, både datum och klockslag på dygnet.  Utan korrekt tid är
@@ -48,7 +50,7 @@ att börja med om principer, att hitta på en metod att göra detta.
 Utöver det så ska projektet ta fram ett bibliotk som implementerar
 denna metod som ska kunna vara till nytta för så många som möjligt.
 
-## Lösningförslag
+## Metod
 
 Metoden kan konceptuellt delas upp i två delar:
 
@@ -67,6 +69,8 @@ Metoden kan konceptuellt delas upp i två delar:
   överensstämmer.  Vi har valt att utgå från den "selection and
   clustering algorithm" som beskrivs i RFC5906.
 
+## Implementation
+
 För implementations-delen av har vi valt att göra två implementationer.
 
 * En implementation i Python vars mål är att vara lätt att förstå.  Vi
@@ -82,7 +86,7 @@ För implementations-delen av har vi valt att göra två implementationer.
   på Arduino, Raspberry Pi, eller en riktig dator som kör Linux,
   Windows eller MacOS kan köra kod skriven i C.
 
-Referensplattformar:
+## Referensplattformar
 
 * Utvecklingen av både Python- och C-implementationerna har skett på
   en dator körandes Linux.
@@ -96,10 +100,6 @@ Referensplattformar:
 <p align="left">
   <img src="Documentation/ttgo.jpg" width="600" height="400" title="TTGO ESP32">
 </p>
-
-
-
-
 
 
 
