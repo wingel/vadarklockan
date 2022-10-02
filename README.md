@@ -171,9 +171,9 @@ Koden klarar än så länge bara IPv4.
 
 Eftersom Roughtime-protokollet än så länge bara är en "draft" så finns
 det inte så många användsbara tids-servar.  Framför allt finns det
-bara en enda sever-implementation som fullt stödjer (IETF draft
+bara en enda sever-implementation som fullt stödjer [IETF draft
 version 05 av
-Roughtime)[https://tools.ietf.org/html/draft-ietf-ntp-roughtime-05].
+Roughtime](https://tools.ietf.org/html/draft-ietf-ntp-roughtime-05).
 Även denna implementation, skriven i C, är gjord av Marcus Dansarie.
 
 Netnod har valt att sätta upp flera Roughtime-servrar med denna
