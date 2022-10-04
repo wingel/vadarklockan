@@ -26,7 +26,7 @@ if __name__ == '__main__' and not sys.argv[0]:
 from pyroughtime import RoughtimeClient
 
 from overlap import OverlapAlgorithm
-from overlap_ref import RefOverlapAlgorithm
+from overlap_ref import ReferenceOverlapAlgorithm
 
 statf = open('stat.json', 'a')
 
@@ -109,7 +109,7 @@ def main():
     wanted = 10
 
     algorithm = OverlapAlgorithm()
-    ref_algorithm = RefOverlapAlgorithm()
+    ref_algorithm = ReferenceOverlapAlgorithm()
 
     statf.write('\n')
     statf.flush()

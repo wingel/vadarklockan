@@ -10,7 +10,8 @@ Welcome to Vad är klockan's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+   python_overlap
+   pyroughtime
 
 Indices and tables
 ==================
@@ -18,3 +19,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+

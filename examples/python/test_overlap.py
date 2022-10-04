@@ -3,10 +3,10 @@
 import unittest
 import random
 
-from overlap_ref import RefOverlapAlgorithm
+from overlap_ref import ReferenceOverlapAlgorithm
 from overlap import OverlapAlgorithm
 
-ALGOS = [ RefOverlapAlgorithm, OverlapAlgorithm ]
+ALGOS = [ ReferenceOverlapAlgorithm, OverlapAlgorithm ]
 RANDOM_COUNT = 1000
 
 VERBOSE = 0
