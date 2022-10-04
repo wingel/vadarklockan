@@ -16,6 +16,14 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../../examples/python'))
 
+try:
+    os.makedirs('../build')
+except IOError:
+    pass
+ec = os.system('doxygen')
+if ec:
+    sys.exit(ec)
+
 # -- Project information -----------------------------------------------------
 
 project = 'Vad är klockan'
@@ -32,6 +40,11 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+#    'sphinx.ext.mathjax',
+#    'sphinx.ext.viewcode',
+#    'sphinx.ext.imgmath',
+#    'sphinx.ext.todo',
+    'breathe',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -43,6 +56,9 @@ templates_path = ['_templates']
 exclude_patterns = []
 
 autosummary_generate = True
+
+breathe_projects = { "overlap_algo": "../build/doxygen/xml/" }
+breathe_default_project = "overlap_algo"
 
 # -- Options for HTML output -------------------------------------------------
 

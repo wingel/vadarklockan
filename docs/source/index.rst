@@ -12,6 +12,9 @@ Welcome to Vad är klockan's documentation!
 
    python_overlap
    pyroughtime
+   c_overlap
+   vrt
+   tweetnacl
 
 Indices and tables
 ==================
