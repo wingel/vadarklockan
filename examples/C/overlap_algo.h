@@ -63,8 +63,8 @@ void overlap_del(struct overlap_algo *algo);
  * If the function returns 0 indicating an error, the algorithm
  * instance should not be used any more, delete it and start over.
  *
- * \param lo the low value of the range
- * \param hi the high value of the range
+ * \param lo the low value for range
+ * \param hi the high value for range
  * \returns 1 on success or 0 on failure (memory allocation failed)
  */
 int overlap_add(struct overlap_algo *algo, overlap_value_t lo, overlap_value_t hi);
@@ -77,9 +77,9 @@ int overlap_add(struct overlap_algo *algo, overlap_value_t lo, overlap_value_t h
  * If returned number of overlaps is 0 the nothing will be written to
  * the values pointed to by lo and hi.
  *
- * \param lo the low value of the range is written to this pointer
- * \param hi the high value of the range is written to this pointer
- * \returns the number of overlaps found
+ * \param lo the low value of the overlap is written to this pointer
+ * \param hi the high value of the overlap is written to this pointer
+ * \returns the number of ranges in the returned overlap
  */
 int overlap_find(struct overlap_algo *algo, overlap_value_t *lo, overlap_value_t *hi);
 

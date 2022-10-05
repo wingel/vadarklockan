@@ -124,7 +124,7 @@ plattformar.
 
 ## Implementationsdetaljer Python
 
-"pyroughtime" har från början stöd både för draft 05 och äldre
+"pyroughtime" har från början stöd både för draft 06 och äldre
 versioner av Roughtime.
 
 ### Python på Linux
@@ -148,8 +148,8 @@ för att kunna ställa klockan från Python-kod (settimeofday).
 
 ## Implementationsdetaljer C
 
-"vroughtime" hade från början inte stöd för draft 05 så koden har
-modifierats så att den stödjer både draft 05 och äldre versioner av
+"vroughtime" hade från början inte stöd för draft 06 så koden har
+modifierats så att den stödjer både draft 06 och äldre versioner av
 Roughtime.  Samma kod används både på Linux och på ESP32.
 
 ### C på Linux
@@ -172,8 +172,8 @@ Koden klarar än så länge bara IPv4.
 Eftersom Roughtime-protokollet än så länge bara är en "draft" så finns
 det inte så många användsbara tids-servar.  Framför allt finns det
 bara en enda sever-implementation som fullt stödjer [IETF draft
-version 05 av
-Roughtime](https://tools.ietf.org/html/draft-ietf-ntp-roughtime-05).
+version 06 av
+Roughtime](https://tools.ietf.org/html/draft-ietf-ntp-roughtime-06).
 Även denna implementation, skriven i C, är gjord av Marcus Dansarie.
 
 Netnod har valt att sätta upp flera Roughtime-servrar med denna

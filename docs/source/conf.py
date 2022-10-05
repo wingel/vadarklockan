@@ -16,14 +16,6 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../../examples/python'))
 
-try:
-    os.makedirs('../build')
-except IOError:
-    pass
-ec = os.system('doxygen')
-if ec:
-    sys.exit(ec)
-
 # -- Project information -----------------------------------------------------
 
 project = 'Vad är klockan'
@@ -40,10 +32,16 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+
+    # Support google and numpy docstring format
+    'sphinx.ext.napoleon',
+
 #    'sphinx.ext.mathjax',
 #    'sphinx.ext.viewcode',
 #    'sphinx.ext.imgmath',
 #    'sphinx.ext.todo',
+
+    # Bridge C documentation code via Doxygen XML and Breathe
     'breathe',
 ]
 
@@ -54,11 +52,6 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
-
-autosummary_generate = True
-
-breathe_projects = { "overlap_algo": "../build/doxygen/xml/" }
-breathe_default_project = "overlap_algo"
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -71,3 +64,22 @@ html_theme = 'alabaster'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+# Use autosummary
+
+autosummary_generate = True
+
+# Include C documentation via Doxygen XML generation and Breathe
+
+breathe_projects = { "C": "../build/doxygen/xml/" }
+breathe_default_project = "C"
+
+# Call doxygen to generate XML files
+try:
+    os.makedirs('../build')
+except IOError:
+    pass
+ec = os.system('doxygen')
+if ec:
+    sys.exit(ec)
+

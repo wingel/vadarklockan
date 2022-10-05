@@ -59,7 +59,9 @@ class OverlapAlgorithm(object):
     def __init__(self, ranges = []):
         """Create a new OverlapAlgorithm object.
 
-        :param ranges: Optional list of "ranges" that should be added.
+        Args:
+            ranges (list): Optional list of "ranges" that should be
+                added.  Each range is a tuple on the form (lo, hi)
         """
 
         self._edges = []
@@ -71,9 +73,13 @@ class OverlapAlgorithm(object):
     def add(self, lo, hi):
         """Add a range.
 
-        :param lo: low limit for the range.
-        :param hi: high limit for the range.
-        :raise ValueError: if lo >= hi
+        Args:
+            lo: low value for the range
+
+            hi: high value for the range
+
+        Raises:
+            ValueError: if lo >= hi
         """
 
         if lo > hi:
@@ -88,12 +94,15 @@ class OverlapAlgorithm(object):
         self._wanted += 1
 
     def find(self):
-        """Find overlapping range.
+        """Find overlap between ranges.
 
-        :return: count, lo, hi
+        Returns:
+            A tuple with the following values:
+                count: number of ranges in returned overlap
 
-        count is the number of overlaps.  lo and hi are the limits of
-        the overlapping range.
+                lo: low value for overlap
+
+                hi: high value for overlap
         """
 
         if not self._wanted:

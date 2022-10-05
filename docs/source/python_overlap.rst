@@ -1,5 +1,5 @@
-Python implementation of Overlap Algorithm
-==========================================
+Python Overlap Algorithm
+========================
 
 .. automodule:: overlap
    :members:
