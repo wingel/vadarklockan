@@ -132,4 +132,3 @@ int overlap_find(struct overlap_algo *algo, overlap_value_t *lo, overlap_value_t
         compile-command: "gcc -Wall -g -shared -o liboverlap_algo.so overlap_algo.c "
     End:
 */
-

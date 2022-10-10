@@ -33,10 +33,10 @@ typedef enum {
   ((uint32_t)(val)[0] | (uint32_t)(val)[1] << (uint32_t)8 |                    \
    (uint32_t)(val)[2] << (uint32_t)16 | (uint32_t)(val)[3] << (uint32_t)24)
 
-#define VRT_TAG_PAD MAKE_TAG("PAD\0")
+#define VRT_TAG_PAD MAKE_TAG("PAD\xff")
 #define VRT_TAG_VER MAKE_TAG("VER\0")
 #define VRT_TAG_SIG MAKE_TAG("SIG\0")
-#define VRT_TAG_NONCE MAKE_TAG("NONC")
+#define VRT_TAG_NONC MAKE_TAG("NONC")
 #define VRT_TAG_MIDP MAKE_TAG("MIDP")
 #define VRT_TAG_RADI MAKE_TAG("RADI")
 #define VRT_TAG_ROOT MAKE_TAG("ROOT")
@@ -58,13 +58,6 @@ vrt_ret_t vrt_blob_slice(const vrt_blob_t *b, vrt_blob_t *slice,
 #else
 #define VISIBILITY_ONLY_TESTING static
 #endif
-
-vrt_ret_t vrt_parse_response(uint8_t *nonce_sent, uint32_t nonce_len,
-                             uint32_t *reply, uint32_t reply_len, uint8_t *pk,
-                             uint64_t *out_midpoint, uint32_t *out_radii, int variant);
-
-vrt_ret_t vrt_make_query(uint8_t *nonce, uint32_t nonce_len, uint8_t *out_query,
-                         uint32_t out_query_len, int variant);
 
 static const char CONTEXT_CERT[] = "RoughTime v1 delegation signature--\x00";
 static const char CONTEXT_RESP[] = "RoughTime v1 response signature\x00";
@@ -90,6 +83,47 @@ static const char CONTEXT_RESP[] = "RoughTime v1 response signature\x00";
 
 #define VRT_QUERY_LEN 1024
 #define VRT_QUERY_PACKET_LEN (12+VRT_QUERY_LEN)
+
+/** Make a roughtime query packet
+ *
+ * \param nonce pointer to a nonce which should be unique for each query
+ * \param nonce_len length of the nonce
+ * \param out_query pointer to a buffer where the query will be writtern
+ * \param out_query_len pointer to the length of the query buffer
+ * \param variant protocol variant (i.e. the roughtime draft number)
+ *
+ * The value pointed to by out_query_len will be updated with the
+ * actual query length.
+ *
+ * Protocol variants:
+ *
+ * Variant 4 or earlier: The nonce size must be 64 bytes or larger
+ * (only the first 64 bytes will be used).  The size of the out_query
+ * buffer must be at least 1024 bytes.
+ *
+ * Variant 5 or later: The nonce size must be 32 bytes or larger (only
+ * the first 32 bytes will be used).  The size of the out_query buffer
+ * must be at least 1036 bytes.
+ *
+ * Variant 7 or later: Currently NOT supported by this implementation.
+ */
+vrt_ret_t vrt_make_query(uint8_t *nonce, uint32_t nonce_len, uint8_t *out_query,
+                         uint32_t *out_query_len, int variant);
+
+/** Parse a roughtime query response
+ *
+ * \param nonce_sent pointer to the nonce transmitted in the query
+ * \param nonce_len lenght of the nonce sent (can be larger than the actual number used in the protocol, see the vrt_make_query function for more information
+ * \param reply pointer to buffer with response
+ * \param reply_len length of response
+ * \param pk public key for the server, must be 32 bytes long
+ * \param out_midpoint pointer to where the midpoint value from the response should be written
+ * \param out_radii pointer to where the radii value from the response should be written
+ * \param variant protocol variant (i.e. the roughtime draft number)
+ */
+vrt_ret_t vrt_parse_response(uint8_t *nonce_sent, uint32_t nonce_len,
+                             uint32_t *reply, uint32_t reply_len, uint8_t *pk,
+                             uint64_t *out_midpoint, uint32_t *out_radii, int variant);
 
 #ifdef __cplusplus
 }

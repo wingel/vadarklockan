@@ -1,7 +1,11 @@
 CC = gcc
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -O2
 
-all: vrt_client_unix
+all: vak_client
 
-vrt_client_unix: vrt_client_unix.c clusteringAlgorithm.c vrt.c tweetnacl.c base64.c
+vak_client: vak_client.c overlap_algo.c vrt.c tweetnacl.c base64.c
+
+test: vak_client
+	valgrind -s --leak-check=yes ./vak_client
+
 
