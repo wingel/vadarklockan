@@ -443,6 +443,14 @@ vrt_ret_t vrt_parse_response(uint8_t *nonce_sent, uint32_t nonce_len,
   CHECK(vrt_verify_nonce(&srep, &indx, &path, nonce_sent, variant));
   CHECK(vrt_verify_bounds(&srep, &cert_dele, out_midpoint, out_radii));
 
+  if (variant > 0) {
+    /* convert new MJD format to microseconds since time_t */
+      /* TODO adjust this code so that it handles leap seconds properly */
+      *out_midpoint =
+          ((*out_midpoint >> 40) - 40587) * 86400000000 +
+          (*out_midpoint & 0xffffffffff);
+  }
+
   return VRT_SUCCESS;
 }
 

@@ -41,6 +41,9 @@ extensions = [
 #    'sphinx.ext.imgmath',
 #    'sphinx.ext.todo',
 
+    # Support markdown
+    'myst_parser',
+
     # Bridge C documentation code via Doxygen XML and Breathe
     'breathe',
 ]

@@ -231,6 +231,7 @@ API
    c_overlap
    vrt
    tweetnacl
+   bakgrund
 
 Indices and tables
 ==================
@@ -238,4 +239,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

@@ -127,6 +127,9 @@ int doit(struct rt_server *server, clusteringData *server_cluster_data)
   uint8_t query[VRT_QUERY_PACKET_LEN] = {0};
   struct sockaddr_in servaddr;
   int sockfd = prepare_socket();
+
+  printf("%s:%u: %d\n", server->host, servers->port, servers->variant);
+
   prepare_servaddr(&servaddr, server->host, server->port);
 
   /* prepare query */
@@ -175,18 +178,10 @@ int doit(struct rt_server *server, clusteringData *server_cluster_data)
 
   uint64_t local = (st + rt) / 2;
   double adjustment = 0;
-  uint64_t mjd_time;
 
-  // Take into account the server version when deciding adjustment
-  if(server->variant == 0){
-    adjustment = ((double)out_midpoint - (double)local)/1000000;
+  adjustment = ((double)out_midpoint - (double)local)/1000000;
 
-  }else{
-    unsigned mjd = out_midpoint >> 40;
-    uint64_t microseconds_from_midnight = out_midpoint & 0xffffffffff;
-    mjd_time = (mjd - 40587) * 86400000000 + microseconds_from_midnight;
-    adjustment = ((double)mjd_time - (double)local)/1000000;
-  }
+  printf("%s:%u: %d adj %.6fs\n", server->host, servers->port, servers->variant, adjustment);
 
   // Finds the overlap from the edges
   if(find_overlap(server_cluster_data, adjustment, uncertainty) == -1){
@@ -209,10 +204,9 @@ int main(int argc, char **argv) {
       int i;
 
       for (i = 0; i < sizeof(servers) / sizeof(servers[0]); i++) {
-	      printf("%s:%u:\n", servers[i].host, servers[i].port);
-	      if(doit(&servers[i], server_cluster_data) == -1){
-          printf("Something went wrong in doit\n");
-        }
+          if(doit(&servers[i], server_cluster_data) == -1){
+              printf("Something went wrong in doit\n");
+          }
       }
   } else {
       if (argc != 5) {
