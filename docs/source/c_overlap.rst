@@ -1,4 +1,4 @@
-C implementation of Overlap Algorithm
+C Overlap Algorithm
 =====================================
 
 .. doxygenstruct:: overlap_algo

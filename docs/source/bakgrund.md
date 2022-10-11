@@ -1,4 +1,6 @@
-# Vad är Klockan - Background in Swedish
+# Bakgrund
+
+Välkommen till "Vad är klockan?"
 
 (Det här är ungefär samma information som på huvudsidan, men från
 innan översättningen till engelska gjordes och kan därmed vara
@@ -122,7 +124,7 @@ plattformar.
   eventuellt även på ESP8266-enheter.
 
 <p align="center">
-  <img src="_images/ttgo.jpg" width="600" height="400" title="TTGO ESP32">
+  <img src="_images/ttgo.jpg" width="600" height="400" title="TTGO ESP32" />
 </p>
 
 ## Implementationsdetaljer Python
@@ -193,4 +195,3 @@ Projektet "Vad är klockan?" har genomförts under 2022 av Calle
 Lindkvist (C-implementation), Filip Eriksson (Python-implementation)
 under handledning av Christer Weinigel (C/Python och
 severinfrastruktur hos Netnod samt paketering och dokumentation).
-

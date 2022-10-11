@@ -6,7 +6,13 @@
 Welcome to "vad är klockan?"
 ============================
 
-"Vad är klockan?"  is Swedish for "what time is it?"
+"Vad är klockan?" is Swedish for the question "what time is it?"
+
+This project solves the quetion on how to let an internet-connected
+device get time securely during boot.
+
+Background
+==========
 
 In order to be able to communicate securely on the internet, it is
 important to be able to answer the question "what time is it?".  With
@@ -52,12 +58,10 @@ where they to save battery during shipping and won't start their
 internal clock until they are powered up the first time.  This means
 that the first time they start up they will not know what time it is.
 
-The goal of the project "vad är klockan" is to let an
-internet-connected device get time securely during boot.  To do this
-the project is split into two parts.  The fist part is about
-priciples, to find a method to do this.  The second part is to write a
-library to actually implement this, a library which should be useful
-for as many people as possible.
+Our solution is to split the problem into two main parts.  The fist
+part is about priciples, to find a method on how to securely get time
+at boot.  The second part is to write a library to actually implement
+this, a library which should be useful for as many people as possible.
 
 Method
 ======
@@ -112,6 +116,9 @@ For the implementation part of, we have chosen to make two implementations.
   algorithm to select which ones time-servers to trust is a port of
   the algorithm in Python code above.
 
+If should be easy to port the code to other languages such as Rust or
+Go if someone wants to do that.
+
 Reference platforms
 ===================
 
@@ -126,72 +133,16 @@ with, but it should be easy to port the code to others platforms.
   but has not been tested on those platforms so far.
 
 * Additionally, we have chosen to port the implementation to a small
-  one ESP32 based device with WiFi to show it also works on smaller
-  IoT devices.  The ESP32-based platform can run a stripped down
-  version of the Python implementation in a MicroPython environment
-  and the C implementation runs in an Arduino environment.  That ESP32
-  device is called "TTGO" but the code should run on most ESP32
-  devices and possibly also on ESP8266 devices.
+  ESP32 based device with WiFi to show it also works on smaller IoT
+  devices.  The ESP32-based platform can run a stripped down version
+  of the Python implementation in a MicroPython environment and the C
+  implementation runs in an Arduino environment.  That ESP32 device is
+  called "TTGO" but the code should run on most ESP32 devices and
+  possibly also on ESP8266 devices.
 
 .. image:: _static/images/ttgo.jpg
    :align: center
    :alt: TTGO ESP32
-
-Python Implementation Details
-=============================
-
-The existing project "pyroughtime" supports both the draft 06 version
-and older versions of Roughtime.
-
-Python on Linux
----------------
-
-The Python 3 implementation for Linux can be found in examples/python.
-
-This version should run on most modern Linux distributions with Python 3.
-
-MicroPython on ESP32
---------------------
-
-The Python implementation for TTGO ESP32 can be found in examples/micropython-esp32-ttgo.
-
-This is mostly a "toy implementation" to show that it is possible to
-run the Python code on a tiny platform.  In production it would be
-better to port the C implementation of "vad är klockan" to the
-Micropython environment and create a Python wrapper for it.
-
-MicroPython on the TTGO ESP32 has very little free memory available
-and alse differs quite a bit much from mainline Python.  In order to
-accommodate this "pyroughtime" has had to be slimmed down and modified
-considerably.
-
-MicroPython for ESP32 has been extended with support for those
-encryption primitives needed for Roughtime (ed25519, sha512) and to be
-able to set the clock from Python code (settimeofday).
-
-C Implementation Details
-========================
-
-"vroughtime" did not initially support draft 06 so the code has
-modified to support both draft 06 and older versions of Roughtime.
-The same code is used both on Linux and on ESP32.
-
-C on Linux
-----------
-
-The C implementation for Linux can be found in examples/C.
-
-Some glue code needed to be written to run on Linux and for UDP
-communication via BSD sockets API.  The code supports both IPv4 and
-IPv6.
-
-C on ESP32
-----------
-
-The C implementation for Linux can be found in examples/esp32.
-
-Some sticky code needed to be written to use WiFi and UDP on the ESP32.
-The code so far only supports IPv4.
 
 The Roughtime protocol
 ======================
@@ -209,8 +160,8 @@ servers that with incorrect time (falseticker.roughtime.netnod.se),
 these servers should never be used in production, but are useful for
 validating the algorithms used to discard bad Roughtime servers.
 
-Implementation
-==============
+People
+======
 
 The project "What time is it?" has been carried out during 2022 by
 Calle Lindkvist (C implementation), Filip Eriksson (Python
@@ -218,20 +169,15 @@ implementation) under the supervision of Christer Weinigel (C/Python
 and server infrastructure at Netnod as well as packaging and
 documentation).
 
-API
-===
+Contents
+========
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
 
-   python_overlap
-   pyroughtime
-   c_overlap
-   vrt
-   tweetnacl
-   bakgrund
-   selection_clustering
+   python
+   c
+   swedish
 
 Indices and tables
 ==================
