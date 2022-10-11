@@ -133,9 +133,8 @@ with, but it should be easy to port the code to others platforms.
   device is called "TTGO" but the code should run on most ESP32
   devices and possibly also on ESP8266 devices.
 
-.. image:: ttgo.jpg
-   :width: 600
-   :height: 400
+.. image:: _static/images/ttgo.jpg
+   :align: center
    :alt: TTGO ESP32
 
 Python Implementation Details
@@ -200,7 +199,7 @@ The Roughtime protocol
 Since the Roughtime protocol is a "draft" there are not that many
 usable Roughtime time-servers out the.  There is only a single server
 implementation that fully supports `IETF draft version 06 of Roughtime
-<https://tools.ietf.org/html/draft-ietf-ntp-roughtime-06>`_.  This
+<https://datatracker.ietf.org/doc/html/draft-ietf-ntp-roughtime-06>`_.  This
 implementation, written in C, is made by Marcus Dansarie.
 
 Netnod has chosen to set up several Roughtime servers with this

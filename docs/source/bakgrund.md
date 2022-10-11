@@ -121,7 +121,7 @@ plattformar.
   "TTGO" men koden borde gå att köra på de flesta ESP32-enheter och
   eventuellt även på ESP8266-enheter.
 
-<p align="left">
+<p align="center">
   <img src="_images/ttgo.jpg" width="600" height="400" title="TTGO ESP32">
 </p>
 
@@ -176,7 +176,7 @@ Eftersom Roughtime-protokollet än så länge bara är en "draft" så finns
 det inte så många användsbara tids-servar.  Framför allt finns det
 bara en enda sever-implementation som fullt stödjer [IETF draft
 version 06 av
-Roughtime](https://tools.ietf.org/html/draft-ietf-ntp-roughtime-06).
+Roughtime](https://datatracker.ietf.org/doc/html/draft-ietf-ntp-roughtime-06).
 Även denna implementation, skriven i C, är gjord av Marcus Dansarie.
 
 Netnod har valt att sätta upp flera Roughtime-servrar med denna
