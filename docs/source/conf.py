@@ -41,6 +41,9 @@ extensions = [
 #    'sphinx.ext.imgmath',
 #    'sphinx.ext.todo',
 
+    # Support Jupyter notebooks
+    'nbsphinx',
+
     # Support markdown
     'myst_parser',
 

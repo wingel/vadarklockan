@@ -232,6 +232,7 @@ API
    vrt
    tweetnacl
    bakgrund
+   selection_clustering
 
 Indices and tables
 ==================
