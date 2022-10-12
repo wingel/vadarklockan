@@ -371,12 +371,23 @@ int main(int argc, char *argv[]) {
     /* If this code is enabled, adjust the local clock. */
     if (0) {
         struct timeval tv;
-        /* Take the middle of the adjustment range */
-        double adjustment = (lo + hi) / 2;
-        gettimeofday(&tv, NULL);
-        tv.tv_sec += adjustment; /* integer portion of adjustment */
-        tv.tv_usec += (adjustment - tv.tv_sec) * 1000000; /* fractional part converted to microseconds */
-        settimeofday(&tv, NULL);
+        uint64_t t;
+        double adj;
+
+        t = get_time();
+
+        /* Use the middle of the adjustment range */
+        adj = (lo + hi) / 2;
+
+        t += adj * 1E6;
+
+        tv.tv_sec = t / 1000000;
+        tv.tv_usec = t % 1000000;
+
+        int r = settimeofday(&tv, NULL);
+        printf("settimeofday %lu.%lu returned %d: %s\n",
+               (unsigned long)tv.tv_sec, (unsigned long)tv.tv_usec,
+               r, strerror(errno));
     }
 
     exit(0);
