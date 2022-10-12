@@ -3,16 +3,8 @@
 
 from __future__ import division, print_function, unicode_literals
 
-""" Försök till clock selection algorithm implementerad i Python som
-ska illustrera de viktiga koncepten för en implementation i andra
-språk.
-
-Mål:
-
-ska helst gå att köra singeltrådat
-implementationen kanske kan vara trådad under skalet.
-
-"""
+"""An example on how to use pyroughtime with the overlap algoritm from
+"vad är klockan" to set the clock."""
 
 import os
 import sys
