@@ -127,6 +127,29 @@ static uint64_t get_time(void)
  * \param lo the low value of the range is written to this pointer
  * \param hi the high value of the range is written to this pointer
  * \returns 1 on success or 0 on failure
+ *
+ * This function contains some platform specific code.
+ * Implementations for other platforms will look slightly different.
+ * The concepts should be the same though.
+ *
+ * Set up an UDP socket.
+ *
+ * Create a random nonce.
+ *
+ * Fill in a buffer with a roughtime query by calling vrt_make_query.
+ *
+ * Save the time the query was sent.
+ *
+ * Send the query to the server and wait for a response.
+ *
+ * Save the time the response was recevied.
+ *
+ * Process the response using vrt_parse_response which also verifies
+ * the signature and that the nonce matches.  If that succeeded,
+ * return the lo and hi adjustments.
+ *
+ * If the processing failed, and the request has not timed out yet, go
+ * back and wait for more responses.
  */
 static int query_server(struct rt_server *server, overlap_value_t *lo, overlap_value_t *hi)
 {
@@ -142,11 +165,14 @@ static int query_server(struct rt_server *server, overlap_value_t *lo, overlap_v
     uint64_t out_midpoint;
     uint32_t out_radii;
 
+    /* Create a random nonce.  This should be as good randomness as
+     * possible, preferably cryptographically secure randomness. */
     if (getentropy(nonce, sizeof(nonce)) < 0) {
         fprintf(stderr, "getentropy(%u) failed: %s\n", (unsigned)sizeof(nonce), strerror(errno));
         return 0;
     }
 
+    /* Fill in the query. */
     query_buf_len = sizeof(query_buf);
     if (vrt_make_query(nonce, 64, query_buf, &query_buf_len, server->variant) != VRT_SUCCESS) {
         fprintf(stderr, "vrt_make_query failed\n");
@@ -156,6 +182,8 @@ static int query_server(struct rt_server *server, overlap_value_t *lo, overlap_v
     printf("%s:%u: variant %d size %u ", server->host, server->port, server->variant, (unsigned)query_buf_len);
     fflush(stdout);
 
+    /* Look up the host name or process the IPv4 address and fill in
+     * the servaddr structure. */
     he = gethostbyname(server->host);
     if (!he) {
         fprintf(stderr, "gethostbyname failed: %s\n", strerror(errno));
@@ -167,14 +195,17 @@ static int query_server(struct rt_server *server, overlap_value_t *lo, overlap_v
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(server->port);
 
+    /* Create an UDP socket */
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) {
         fprintf(stderr, "socket failed: %s\n", strerror(errno));
         return 0;
     }
 
+    /* Get the wall time just before the request was sent out. */
     st = get_time();
 
+    /* Send the request */
     int n = sendto(sockfd, (const char *)query_buf, query_buf_len, 0,
                    (const struct sockaddr *)&servaddr, sizeof(servaddr));
     if (n != query_buf_len) {
@@ -194,7 +225,7 @@ static int query_server(struct rt_server *server, overlap_value_t *lo, overlap_v
         FD_ZERO(&readfds);
         FD_SET(sockfd, &readfds);
 
-        /* use a tenth of the query timeout for the select call */
+        /* Use a tenth of the query timeout for the select call. */
         tv.tv_sec = 0;
         tv.tv_usec = QUERY_TIMEOUT_USECS / 10;
 
@@ -207,9 +238,10 @@ static int query_server(struct rt_server *server, overlap_value_t *lo, overlap_v
             return 0;
         }
 
-        // Gets current time (us since epoch)
+        /* Get the time as soon after the packet was received. */
         rt = get_time();
 
+        /* Get the packet from the kernel. */
         if (FD_ISSET(sockfd, &readfds)) {
             socklen_t respaddrsize = sizeof(respaddr);
             n = recvfrom(sockfd, recv_buffer,
@@ -224,9 +256,13 @@ static int query_server(struct rt_server *server, overlap_value_t *lo, overlap_v
                 return 0;
             }
 
-            /* TODO we might want to check that servaddr and respaddr
-             * match before parsing the response */
+            /* TODO We might want to verify that servaddr and respaddr
+             * match before parsing the response.  This way we could
+             * discard faked packets without having to verify the
+             * signature.  */
 
+            /* Verify the response, check the signature and that it
+             * matches the nonce we put in the query. */
             if (vrt_parse_response(nonce, 64, recv_buffer,
                                    n,
                                    server->public_key, &out_midpoint,
@@ -235,6 +271,7 @@ static int query_server(struct rt_server *server, overlap_value_t *lo, overlap_v
                 continue;
             }
 
+            /* Break out of the loop. */
             break;
         }
 
@@ -271,15 +308,18 @@ int main(int argc, char *argv[]) {
     int i;
     unsigned seed;
 
-    /* we're assuming that the getentropy call returns decent
-     * randomness at boot */
+    // TODO add command line argument "-q" to only query
+    // TODO add command line argument "-v" for verbose
+
+    /* Seed the glibc random function with some randomness.  This is
+     * used to randomize the list of servers. */
     if (getentropy(&seed, sizeof(seed)) < 0) {
         fprintf(stderr, "getentropy(%u) failed: %s\n", (unsigned)sizeof(seed), strerror(errno));
         exit(1);
     }
     srandom(seed);
 
-    /* create a list of servers with the order randomized */
+    /* Create a list of servers with the order randomized */
     for (i = 0; i < sizeof(server_list) / sizeof(server_list[0]); i++)
         randomized_servers[i] = &server_list[i];
     for (i = sizeof(server_list) / sizeof(server_list[0]); i > 0; i--) {
@@ -292,14 +332,14 @@ int main(int argc, char *argv[]) {
     }
     printf("\n");
 
-    /* create the overlap algorithm */
+    /* Create the overlap algorithm */
     algo = overlap_new();
     if (!algo) {
         fprintf(stderr, "overlap_new failed\n");
         exit(1);
     }
 
-    /* query the randomized list of servers until we have a majority
+    /* Query the randomized list of servers until we have a majority
      * of responses which all overlap, the number of overlaps is
      * enough and the uncertainty is low enough */
     for (i = 0; i < sizeof(randomized_servers) / sizeof(randomized_servers[0]); i++) {
@@ -317,8 +357,10 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    /* Delete the overlap algorithm since we're finished with it. */
     overlap_del(algo);
 
+    /* Exit with an error if we didn't succeed */
     if (!success) {
         printf("failure: unable to get %d overlapping responses\n", WANTED_OVERLAPS);
         exit(1);
@@ -326,9 +368,16 @@ int main(int argc, char *argv[]) {
 
     printf("success: %d/%d overlapping responses, range %.6f .. %.6f\n", nr_overlaps, nr_responses, lo, hi);
 
-    // TODO add argument "-q" to only query
-    // TODO add argument "-v" for verbose
-    // TODO call settimeofday here
+    /* If this code is enabled, adjust the local clock. */
+    if (0) {
+        struct timeval tv;
+        /* Take the middle of the adjustment range */
+        double adjustment = (lo + hi) / 2;
+        gettimeofday(&tv, NULL);
+        tv.tv_sec += adjustment; /* integer portion of adjustment */
+        tv.tv_usec += (adjustment - tv.tv_sec) * 1000000; /* fractional part converted to microseconds */
+        settimeofday(&tv, NULL);
+    }
 
     exit(0);
 }
