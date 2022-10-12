@@ -76,6 +76,7 @@ class TestOverlapAlgo(unittest.TestCase):
         self.process([ ], (None,None), 0)
 
     def test_invalid(self):
+        # Invalid range, lo is larger than hi
         self.process([ (2,1) ], (None,None), 0)
 
     def test_single(self):
@@ -147,6 +148,8 @@ class TestOverlapAlgo(unittest.TestCase):
         self.process([ (1,4), (2,3), (5,10), (6,9), (7,8) ], (7,8), 3)
 
     def test_random(self):
+        # Random testing just to see that nothing breaks
+        # expected is None since we don't know what the result ought to be
         N = 30
         for n in range(random.randint(1, RANDOM_COUNT // N)):
             ranges = []
