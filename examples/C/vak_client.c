@@ -326,6 +326,8 @@ int main(int argc, char *argv[]) {
 
     printf("success: %d/%d overlapping responses, range %.6f .. %.6f\n", nr_overlaps, nr_responses, lo, hi);
 
+    // TODO add argument "-q" to only query
+    // TODO add argument "-v" for verbose
     // TODO call settimeofday here
 
     exit(0);

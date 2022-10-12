@@ -1,4 +1,15 @@
 #! /usr/bin/python3
+"""Test case for the C implementation of the overlap algorithm.
+
+Note that we reuse all the Python test cases by building a shared
+library with the C implementation which is then wrapped with a Python
+class which has the sampe API as the Python implementation.
+
+Additionally, some C code is generated with all test cases that are
+run.  That C code is then compiled and run through valgrind to catch
+possible memory errors.
+
+"""
 
 import os
 import sys
@@ -27,13 +38,16 @@ lib = ffi.dlopen('./liboverlap_algo.so')
 
 # Wrap the library with the same API as the Python implementations
 class COverlapAlgorithm(object):
-    def __init__(self):
+    def __init__(self, ranges = []):
         self.algo = lib.overlap_new()
         global fnum
         self.var = 'algo%d' % fnum
         fnum += 1
 
         fr.write('    struct overlap_algo *%s = overlap_new();\n' % self.var)
+
+        for lo, hi in ranges:
+            self.add(lo, hi)
 
     def add(self, lo, hi):
         fr.write('    overlap_add(%s, %s, %s);\n' % (self.var, lo, hi))
@@ -58,7 +72,7 @@ class COverlapAlgorithm(object):
         fr.write('    overlap_del(%s);\n' % (self.var))
         lib.overlap_del(self.algo)
 
-test_overlap.ALGOS.append(COverlapAlgorithm)
+test_overlap.Algo.ALGOS.append(COverlapAlgorithm)
 test_overlap.RANDOM_COUNT = 1000
 
 fhead = '''

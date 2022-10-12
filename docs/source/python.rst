@@ -11,6 +11,9 @@ The Python 3 implementation for Linux can be found in examples/python.
 
 This version should run on most modern Linux distributions with Python 3.
 
+.. todo:: Add instructions on how to run the Python code on Linux.
+          pip install commands for requirements etc
+
 MicroPython on ESP32
 --------------------
 
@@ -29,6 +32,10 @@ considerably.
 MicroPython for ESP32 has been extended with support for those
 encryption primitives needed for Roughtime (ed25519, sha512) and to be
 able to set the clock from Python code (settimeofday).
+
+.. todo:: Add instructions on how to run the Python code on ESP32
+          including on where to get a modified MicroPython and pointer
+          and how to use "run.py"
 
 Python API
 ----------

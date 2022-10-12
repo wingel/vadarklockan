@@ -6,5 +6,5 @@ client written by Marcus Dansarie:
 
     https://github.com/dansarie/pyroughtime
 
-.. automodule:: pyroughtime
+.. autoclass:: pyroughtime.RoughtimeClient
    :members:
