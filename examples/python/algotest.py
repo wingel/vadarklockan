@@ -19,6 +19,10 @@ from pyroughtime import RoughtimeClient
 
 from overlap import OverlapAlgorithm
 from overlap_ref import ReferenceOverlapAlgorithm
+from overlap_multi import MultiOverlapAlgorithm
+
+Algo =  MultiOverlapAlgorithm
+MultiOverlapAlgorithm.ALGOS = [ OverlapAlgorithm, ReferenceOverlapAlgorithm ]
 
 statf = open('stat.json', 'a')
 
@@ -100,8 +104,7 @@ def main():
     # We want a majority where at least this many servers agree
     wanted = 10
 
-    algorithm = OverlapAlgorithm()
-    ref_algorithm = ReferenceOverlapAlgorithm()
+    algo = Algo()
 
     statf.write('\n')
     statf.flush()
@@ -131,13 +134,8 @@ def main():
 
         responses += 1
         lo, hi = server.get_adjustment_range()
-        algorithm.add(lo, hi)
-        ref_algorithm.add(lo, hi)
-        count, lo, hi = algorithm.find()
-        ref_count, ref_lo, ref_hi = ref_algorithm.find()
-        assert count, ref_count
-        assert lo == ref_lo
-        assert hi == ref_hi
+        algo.add(lo, hi)
+        count, lo, hi = algo.find()
         if count > responses // 2 and count >= wanted:
             adjustment = (hi + lo) / 2
             uncertainty = (hi - lo) / 2
@@ -148,13 +146,16 @@ def main():
                 uncertainty * 1E6))
             print()
 
-            # This is a good place to set the clock and break out of the loop
-
             # Getting more responses should always give more overlaps, never fewer
             assert last_count <= count
             last_count = count
 
-            # assert algorithm.adjustment < 1E-3
+            # This is a good place to set the clock and break out of the loop
+            # for testing this is disabled and we keep asking for more responses
+            if 0:
+                time.clock_settime(time.CLOCK_REALTIME, time.time() + adjustment)
+                break
+
 
 if __name__ == '__main__':
     main()
