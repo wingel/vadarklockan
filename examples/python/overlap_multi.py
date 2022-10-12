@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+
 class MultiOverlapAlgorithm(object):
     """An overlap algorithm which tries multiple algorithms and verifies
     that they all produce the same result.
