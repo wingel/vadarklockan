@@ -178,6 +178,7 @@ Contents
    python
    c
    swedish
+   docs
 
 Indices and tables
 ==================

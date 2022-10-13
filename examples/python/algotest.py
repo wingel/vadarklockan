@@ -10,6 +10,7 @@ import os
 import sys
 import json
 import random
+import time
 from datetime import datetime, timedelta, timezone
 
 if __name__ == '__main__' and not sys.argv[0]:
@@ -152,7 +153,7 @@ def main():
 
             # This is a good place to set the clock and break out of the loop
             # for testing this is disabled and we keep asking for more responses
-            if 0:
+            if 1:
                 time.clock_settime(time.CLOCK_REALTIME, time.time() + adjustment)
                 break
 
