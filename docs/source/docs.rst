@@ -9,7 +9,18 @@ written i Jupyter Notebook which pulled into sphinx using nbsphinx.
 
 .. highlight:: bash
 
-    pip3 install -r requirements.txt
+    sudo apt install doxygen
+
+.. highlight:: bash
+
+     pip3 install -r requirements.txt
+
+To build the HTML documentation, enter the "docs" directory and run
+the following command:
+
+.. highlight:: bash
+
+    make clean html
 
 
 
