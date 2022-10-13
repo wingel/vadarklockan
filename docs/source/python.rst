@@ -14,6 +14,19 @@ This version should run on most modern Linux distributions with Python 3.
 .. todo:: Add instructions on how to run the Python code on Linux.
           pip install commands for requirements etc
 
+Unit testing
+------------
+
+Some of the python classes contain unit tests.  The tests are based on
+the Python "unittest" framework.  To perform those tests run:
+
+.. highlight:: bash
+
+::
+
+    cd examples/python
+    python3 -m unittest test*.py
+
 MicroPython on ESP32
 --------------------
 

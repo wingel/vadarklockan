@@ -16,6 +16,20 @@ IPv6.
 
 .. todo:: Add instructions on how to compile and run the C code on Linux
 
+Unit testing
+------------
+
+Some of the c modules contain unit tests.  The tests are based on the
+Python "unittest" framework and reuse the Python code.  To perform
+those tests run:
+
+.. highlight:: bash
+
+::
+
+    cd examples/C
+    python3 -m unittest test*.py
+
 C on ESP32
 ----------
 

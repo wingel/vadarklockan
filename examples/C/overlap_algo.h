@@ -48,7 +48,7 @@ struct overlap_algo *overlap_new(void);
 
 /** Clean up and free an overlap_algo instance.
  *
- * \param algorithm A pointer to the instance
+ * \param algo pointer to the algorithm instance
  */
 void overlap_del(struct overlap_algo *algo);
 
@@ -63,6 +63,7 @@ void overlap_del(struct overlap_algo *algo);
  * If the function returns 0 indicating an error, the algorithm
  * instance should not be used any more, delete it and start over.
  *
+ * \param algo pointer to the algorithm instance
  * \param lo the low value for range
  * \param hi the high value for range
  * \returns 1 on success or 0 on failure (memory allocation failed)
@@ -77,6 +78,7 @@ int overlap_add(struct overlap_algo *algo, overlap_value_t lo, overlap_value_t h
  * If returned number of overlaps is 0 the nothing will be written to
  * the values pointed to by lo and hi.
  *
+ * \param algo pointer to the algorithm instance
  * \param lo the low value of the overlap is written to this pointer
  * \param hi the high value of the overlap is written to this pointer
  * \returns the number of ranges in the returned overlap

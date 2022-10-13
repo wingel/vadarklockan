@@ -54,6 +54,7 @@ class OverlapAlgorithm(object):
 
     This algorithm is based on the selection & clustering algorithm
     from RFC5905 Appendix A.5.5.1.
+
     """
 
     def __init__(self, ranges = []):

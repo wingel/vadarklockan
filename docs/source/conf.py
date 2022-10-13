@@ -44,6 +44,7 @@ extensions = [
 
     # Support Jupyter notebooks
     'nbsphinx',
+#    'IPython.sphinxext.ipython_console_highlighting',
 
     # Support markdown
     'myst_parser',
@@ -61,6 +62,8 @@ templates_path = ['_templates']
 exclude_patterns = []
 
 # -- Options for HTML output -------------------------------------------------
+
+version = '0.1'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.

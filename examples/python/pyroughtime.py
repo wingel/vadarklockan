@@ -434,6 +434,7 @@ class RoughtimeClient:
                                  validity for the delegate key.
                     pathlen    - the length of the Merkle tree path sent in
                                  the server's reply (0 <= pathlen <= 32).
+
         '''
 
         if protocol != 'udp' and protocol != 'tcp':

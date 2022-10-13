@@ -164,10 +164,10 @@ People
 ======
 
 The project "What time is it?" has been carried out during 2022 by
-Calle Lindkvist (C implementation), Filip Eriksson (Python
-implementation) under the supervision of Christer Weinigel (C/Python
-and server infrastructure at Netnod as well as packaging and
-documentation).
+Calle Lindkvist <lindkvistcalle@gmail.com> (C implementation), Filip
+Eriksson <filip_eriksson@live.se> (Python implementation) under the
+supervision of Christer Weinigel (C/Python and server infrastructure
+at Netnod as well as packaging and documentation).
 
 Contents
 ========
