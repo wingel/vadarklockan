@@ -125,6 +125,7 @@ extern int crypto_hashblocks_sha256_tweet(unsigned char *,const unsigned char *,
 #define crypto_hash_VERSION crypto_hash_sha512_VERSION
 #define crypto_hash_sha512_tweet_BYTES 64
 extern int crypto_hash_sha512_tweet(unsigned char *,const unsigned char *,unsigned long long);
+extern int crypto_hash_sha512256(unsigned char *,const unsigned char*,unsigned long long);
 #define crypto_hash_sha512_tweet_VERSION "-"
 #define crypto_hash_sha512 crypto_hash_sha512_tweet
 #define crypto_hash_sha512_BYTES crypto_hash_sha512_tweet_BYTES
