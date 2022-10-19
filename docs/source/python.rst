@@ -4,6 +4,9 @@ Python Implementation
 The existing project "pyroughtime" supports both the draft 06 version
 and older versions of Roughtime.
 
+The reference Python implementation can be found in the directory
+"src/python".
+
 Python on Linux
 ---------------
 

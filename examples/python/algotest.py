@@ -13,6 +13,8 @@ import random
 import time
 from datetime import datetime, timedelta, timezone
 
+sys.path.append('../../src/python')
+
 if __name__ == '__main__' and not sys.argv[0]:
     print()
 

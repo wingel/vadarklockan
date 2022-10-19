@@ -11,6 +11,8 @@ Welcome to "vad är klockan?"
 This project solves the quetion on how to let an internet-connected
 device get time securely during boot.
 
+The source code can be found `<http://github.com/netnod/vadarklockan>`_.
+
 Background
 ==========
 

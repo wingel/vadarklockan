@@ -5,6 +5,8 @@ C Implementation
 modified to support both draft 06 and older versions of Roughtime.
 The same code is used both on Linux and on ESP32.
 
+The C implementation can be found in the directory "src/c".
+
 C on Linux
 ----------
 
@@ -13,6 +15,8 @@ The C implementation for Linux can be found in examples/C.
 Some glue code needed to be written to run on Linux and for UDP
 communication via BSD sockets API.  The code supports both IPv4 and
 IPv6.
+
+The directory "examples/c" contains an example application for Linux.
 
 .. todo:: Add instructions on how to compile and run the C code on Linux
 

@@ -49,6 +49,18 @@ example, to produce an EPUB suitable for e-readers run:
 
 The generated file will be called "build/epub/Vadrklockan.epub".
 
+Checking links
+--------------
+
+The documentation contain links to other pages.  To check that all
+links are working, run:
+
+.. highlight:: bash
+
+::
+
+    make linkcheck
+
 Testcases
 ---------
 
