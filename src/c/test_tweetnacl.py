@@ -35,6 +35,7 @@ class TestTweetNaCl(unittest.TestCase):
         self.assertEqual(out[:len(expect)], expect)
 
     def test_sha512(self):
+        # Test vectors from https://www.di-mgt.com.au/sha_testvectors.html
         for expect, msg in [
                 ( 'ddaf35a193617aba cc417349ae204131 12e6fa4e89a97ea2 0a9eeee64b55d39a 2192992a274fc1a8 36ba3c23a3feebbd 454d4423643ce80e 2a9ac94fa54ca49f', b'abc' ),
                 ( 'cf83e1357eefb8bd f1542850d66d8007 d620e4050b5715dc 83f4a921d36ce9ce 47d0d13c5d85f2b0 ff8318d2877eec2f 63b931bd47417a81 a538327af927da3e', b'' ),
@@ -44,6 +45,8 @@ class TestTweetNaCl(unittest.TestCase):
                 ]:
             self.t(lib.crypto_hash_sha512_tweet, msg, binascii.unhexlify(''.join(expect.split())))
 
+    def test_sha512_random(self):
+        # Compare random hashes with python implementation
         for i in range(100):
             n = random.randrange(1000)
             msg = random.randbytes(n)
@@ -54,10 +57,15 @@ class TestTweetNaCl(unittest.TestCase):
 
     def test_sha512256(self):
         for expect, msg in [
+                ( '53048e2681941ef9 9b2e29b76b4c7dab e4c2d0c634fc6d46 e0e2f13107e7af23', b'abc' ),
                 ( 'c672b8d1ef56ed28 ab87c3622c511406 9bdd3ad7b8f97374 98d0c01ecef0967a', b'' ),
+                ( 'bde8e1f9f19bb9fd 3406c90ec6bc47bd 36d8ada9f11880db c8a22a7078b6a461', b'abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq' ),
+                ( '3928e184fb8690f8 40da3988121d31be 65cb9d3ef83ee614 6feac861e19b563a', b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu' ),
+                ( '9a59a052930187a9 7038cae692f30708 aa6491923ef51943 94dc68d56c74fb21', b'a' * 1000000),
                 ]:
             self.t(lib.crypto_hash_sha512256, msg, binascii.unhexlify(''.join(expect.split())))
 
+    def test_sha512256_random(self):
         for i in range(100):
             n = random.randrange(1000)
             msg = random.randbytes(n)
