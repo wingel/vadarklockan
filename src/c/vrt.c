@@ -104,7 +104,7 @@ static void vrt_query_finish(struct vrt_builder *builder)
 
 vrt_ret_t vrt_make_query(uint8_t *nonce, uint32_t nonce_len,
                          uint8_t *out_query, uint32_t *out_query_len,
-                         int variant)
+                         unsigned variant)
 {
     struct vrt_builder builder;
 
@@ -256,18 +256,26 @@ static vrt_ret_t vrt_get_tag(vrt_blob_t *out, vrt_blob_t *in,
 }
 
 static vrt_ret_t vrt_verify_dele(vrt_blob_t *cert_sig, vrt_blob_t *cert_dele,
-                                 uint8_t *root_public_key) {
-    uint8_t msg[CERT_SIG_SIZE + CERT_DELE_SIZE + CONTEXT_CERT_SIZE] = {0};
+                                 uint8_t *root_public_key, unsigned variant) {
+    /* OLD_CONTEXT_CERT_SIZE is larger han CONTEXT_CERT_SIZE */
+    uint8_t msg[CERT_SIG_SIZE + CERT_DELE_SIZE + OLD_CONTEXT_CERT_SIZE] = {0};
+    size_t msg_size = 0;
 
     CHECK_TRUE(cert_sig->size == CERT_SIG_SIZE, VRT_ERROR_WRONG_SIZE);
     CHECK_TRUE(cert_dele->size == CERT_DELE_SIZE, VRT_ERROR_WRONG_SIZE);
 
-    memcpy(&msg, cert_sig->data, cert_sig->size);
-    memcpy(msg + cert_sig->size, CONTEXT_CERT, CONTEXT_CERT_SIZE);
-    memcpy(msg + cert_sig->size + CONTEXT_CERT_SIZE, cert_dele->data,
-           cert_dele->size);
+    memcpy(&msg + msg_size, cert_sig->data, cert_sig->size);
+    msg_size += cert_sig->size;
+    if (variant >= 7) {
+        memcpy(msg + msg_size, CONTEXT_CERT, CONTEXT_CERT_SIZE);
+        msg_size += CONTEXT_CERT_SIZE;
+    } else {
+        memcpy(msg + msg_size, OLD_CONTEXT_CERT, OLD_CONTEXT_CERT_SIZE);
+        msg_size += OLD_CONTEXT_CERT_SIZE;
+    }
+    memcpy(msg + msg_size, cert_dele->data, cert_dele->size);
+    msg_size += cert_dele->size;
 
-    size_t msg_size = cert_sig->size + cert_dele->size + CONTEXT_CERT_SIZE;
     uint8_t plaintext[sizeof msg] = {0};
     unsigned long long unsigned_message_len;
 
@@ -277,16 +285,19 @@ static vrt_ret_t vrt_verify_dele(vrt_blob_t *cert_sig, vrt_blob_t *cert_dele,
 }
 
 static vrt_ret_t vrt_verify_pubk(vrt_blob_t *sig, vrt_blob_t *srep,
-                                 uint32_t *pubk) {
+                                 uint32_t *pubk, unsigned variant) {
     uint8_t msg[CERT_SIG_SIZE + CONTEXT_RESP_SIZE + MAX_SREP_SIZE] = {0};
+    size_t msg_size = 0;
 
     CHECK_TRUE(sig->size == CERT_SIG_SIZE, VRT_ERROR_WRONG_SIZE);
     CHECK_TRUE(srep->size <= MAX_SREP_SIZE, VRT_ERROR_WRONG_SIZE);
 
-    memcpy(&msg, sig->data, sig->size);
-    memcpy(msg + sig->size, CONTEXT_RESP, CONTEXT_RESP_SIZE);
-    memcpy(msg + sig->size + CONTEXT_RESP_SIZE, srep->data, srep->size);
-    size_t msg_size = sig->size + srep->size + CONTEXT_RESP_SIZE;
+    memcpy(&msg + msg_size, sig->data, sig->size);
+    msg_size += sig->size;
+    memcpy(msg + msg_size, CONTEXT_RESP, CONTEXT_RESP_SIZE);
+    msg_size += CONTEXT_RESP_SIZE;
+    memcpy(msg + msg_size, srep->data, srep->size);
+    msg_size += srep->size;
 
     uint8_t plaintext[sizeof msg] = {0};
     unsigned long long unsigned_message_len;
@@ -296,26 +307,35 @@ static vrt_ret_t vrt_verify_pubk(vrt_blob_t *sig, vrt_blob_t *srep,
     return (ret == 0) ? VRT_SUCCESS : VRT_ERROR_PUBK;
 }
 
-static vrt_ret_t vrt_hash_leaf(uint8_t *out, const uint8_t *in, int noncesize) {
+static vrt_ret_t vrt_hash_leaf(uint8_t *out, const uint8_t *in, int noncesize,
+                               unsigned variant) {
     uint8_t msg[VRT_NODESIZE_MAX + 1 /* domain separation label */];
     msg[0] = VRT_DOMAIN_LABEL_LEAF;
     memcpy(msg + 1, in, noncesize);
-    crypto_hash_sha512(out, msg, noncesize + 1);
+    if (variant >= 7)
+        crypto_hash_sha512256(out, msg, noncesize + 1);
+    else
+        crypto_hash_sha512(out, msg, noncesize + 1);
     return VRT_SUCCESS;
 }
 
 static vrt_ret_t vrt_hash_node(uint8_t *out, const uint8_t *left,
-                               const uint8_t *right, int nodesize) {
+                               const uint8_t *right, int nodesize,
+                               unsigned variant) {
     uint8_t msg[2 * VRT_NODESIZE_MAX + 1 /* domain separation label */];
     msg[0] = VRT_DOMAIN_LABEL_NODE;
     memcpy(msg + 1, left, nodesize);
     memcpy(msg + 1 + nodesize, right, nodesize);
-    crypto_hash_sha512(out, msg, 2 * nodesize + 1);
+    if (variant >= 7)
+        crypto_hash_sha512256(out, msg, 2 * nodesize + 1);
+    else
+        crypto_hash_sha512(out, msg, 2 * nodesize + 1);
     return VRT_SUCCESS;
 }
 
 static vrt_ret_t vrt_verify_nonce(vrt_blob_t *srep, vrt_blob_t *indx,
-                                  vrt_blob_t *path, uint8_t *sent_nonce, int variant) {
+                                  vrt_blob_t *path, uint8_t *sent_nonce,
+                                  unsigned variant) {
     vrt_blob_t root;
     CHECK(vrt_get_tag(&root, srep, VRT_TAG_ROOT));
 
@@ -327,7 +347,7 @@ static vrt_ret_t vrt_verify_nonce(vrt_blob_t *srep, vrt_blob_t *indx,
     // original version has 64-byte nodes.
     const int nodesize = variant >= 5 ? VRT_NODESIZE_ALTERNATE : VRT_NODESIZE_MAX;
 
-    CHECK(vrt_hash_leaf(hash, sent_nonce, nodesize));
+    CHECK(vrt_hash_leaf(hash, sent_nonce, nodesize, variant));
 
     uint32_t index = 0;
     uint32_t offset = 0;
@@ -344,9 +364,9 @@ static vrt_ret_t vrt_verify_nonce(vrt_blob_t *srep, vrt_blob_t *indx,
         }
 
         if (index & (1UL << i)) {
-            CHECK(vrt_hash_node(hash, (uint8_t *)path_chunk.data, hash, nodesize));
+            CHECK(vrt_hash_node(hash, (uint8_t *)path_chunk.data, hash, nodesize, variant));
         } else {
-            CHECK(vrt_hash_node(hash, hash, (uint8_t *)path_chunk.data, nodesize));
+            CHECK(vrt_hash_node(hash, hash, (uint8_t *)path_chunk.data, nodesize, variant));
         }
         offset += nodesize / 4;
     }
@@ -387,7 +407,7 @@ static vrt_ret_t vrt_verify_bounds(vrt_blob_t *srep, vrt_blob_t *dele,
 
 vrt_ret_t vrt_parse_response(uint8_t *nonce_sent, uint32_t nonce_len,
                              uint32_t *reply, uint32_t reply_len, uint8_t *pk,
-                             uint64_t *out_midpoint, uint32_t *out_radii, int variant) {
+                             uint64_t *out_midpoint, uint32_t *out_radii, unsigned variant) {
     vrt_blob_t parent;
     vrt_blob_t cert = {0};
     vrt_blob_t cert_sig = {0};
@@ -430,10 +450,13 @@ vrt_ret_t vrt_parse_response(uint8_t *nonce_sent, uint32_t nonce_len,
 
     CHECK_TRUE(pubk.size == 32, VRT_ERROR_MALFORMED);
 
-    CHECK(vrt_verify_dele(&cert_sig, &cert_dele, pk));
+    /* TODO verify that nonce in response matches nonce_sent before
+     * trying to hash and check signature */
+
+    CHECK(vrt_verify_dele(&cert_sig, &cert_dele, pk, variant));
     CHECK(vrt_verify_nonce(&srep, &indx, &path, nonce_sent, variant));
     CHECK(vrt_verify_bounds(&srep, &cert_dele, out_midpoint, out_radii));
-    CHECK(vrt_verify_pubk(&sig, &srep, pubk.data));
+    CHECK(vrt_verify_pubk(&sig, &srep, pubk.data, variant));
 
     if (variant >= 5) {
         /* convert new MJD format to microseconds since time_t */
