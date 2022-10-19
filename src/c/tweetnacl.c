@@ -577,7 +577,7 @@ static const u8 iv_sha512256[64] = {
     0x0E,0xB7,0x2D,0xDC,0x81,0xC5,0x2C,0xA2
 } ;
 
-int crypto_hash_internal(u8 *out,const u8 *m,u64 n, const u8 *iv)
+int crypto_hash_internal(u8 *out,const u8 *m,u64 n, const u8 *iv, unsigned outlen)
 {
   u8 h[64],x[256];
   u64 i,b = n;
@@ -598,19 +598,19 @@ int crypto_hash_internal(u8 *out,const u8 *m,u64 n, const u8 *iv)
   ts64(x+n-8,b<<3);
   crypto_hashblocks(h,x,n);
 
-  FOR(i,64) out[i] = h[i];
+  FOR(i,outlen) out[i] = h[i];
 
   return 0;
 }
 
 int crypto_hash(u8 *out,const u8 *m,u64 n)
 {
-    return crypto_hash_internal(out,m,n,iv_sha512);
+    return crypto_hash_internal(out,m,n,iv_sha512, 64);
 }
 
 int crypto_hash_sha512256(u8 *out,const u8 *m,u64 n)
 {
-    return crypto_hash_internal(out,m,n,iv_sha512256);
+    return crypto_hash_internal(out,m,n,iv_sha512256, 32);
 }
 
 sv add(gf p[4],gf q[4])
