@@ -1,11 +1,13 @@
 Python Implementation
 =====================
 
-The existing project "pyroughtime" supports both the draft 06 version
-and older versions of Roughtime.
-
 The reference Python implementation can be found in the directory
-"src/python".
+"src/python".  It is based on Marcus Dansarie's Python implementation
+of roughtime called `pyroughtime
+(https://github.com/dansarie/pyroughtime)`_, "An experimental
+Roughtime client and server implementation in Python 3 using `IETF draft 07 (https://tools.ietf.org/html/draft-ietf-ntp-roughtime-07)`_.
+
+Pyroughtime is licensed using `GPL v3 (https://www.gnu.org/licenses/gpl-3.0)`_.
 
 Python on Linux
 ---------------
